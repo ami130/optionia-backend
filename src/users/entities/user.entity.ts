@@ -3,6 +3,7 @@ import { UserRole } from '../enum/userRole.enum';
 import * as bcrypt from 'bcrypt';
 import { Blog } from 'src/modules/blog/entities/blog.entity';
 import { Exclude } from 'class-transformer';
+import { Review } from 'src/modules/review/entities/review.entity';
 
 @Entity('users')
 @Unique(['email'])
@@ -30,6 +31,9 @@ export class User {
 
   @OneToMany(() => Blog, (blog) => blog.author)
   blogs: Blog[];
+
+  @OneToMany(() => Review, (review) => review.user, { eager: true, cascade: true })
+  reviews: Review[];
 
   @BeforeInsert()
   @BeforeUpdate()

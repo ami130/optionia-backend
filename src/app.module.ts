@@ -10,6 +10,7 @@ import { BlogModule } from './modules/blog/blog.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { TagModule } from './modules/tag/tag.module';
 import { ProductModule } from './modules/product/product.module';
+import { ReviewModule } from './modules/review/review.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ProductModule } from './modules/product/product.module';
     ContactModule,
     TagModule,
     ProductModule,
+    ReviewModule,
   ],
   // providers: [IsUniqueConstraint],
   // controllers: [UsersController],

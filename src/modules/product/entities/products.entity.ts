@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { ProductImage } from './product-images.entity';
 import { Tag } from 'src/modules/tag/entities/tag.entity';
+import { Review } from 'src/modules/review/entities/review.entity';
 
 @Entity('products')
 export class Product {
@@ -61,4 +62,7 @@ export class Product {
   @OneToMany(() => ProductImage, (image) => image.product, { cascade: true, eager: true })
   images: ProductImage[];
   data: any;
+
+  @OneToMany(() => Review, (review) => review.product, { eager: true, cascade: true })
+  reviews: Review[];
 }

@@ -144,7 +144,7 @@ export class ProductService {
   async getProductDetails(id: number): Promise<Product> {
     const product = await this.productRepository.findOne({
       where: { id: id },
-      relations: ['tags', 'images'], // Include related entities if needed
+      relations: ['tags', 'images', 'reviews', 'reviews.user'], // Include related entities if needed
     });
 
     if (!product) {

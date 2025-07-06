@@ -16,8 +16,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import * as multer from 'multer';
-const memoryStorage = multer.memoryStorage;
+import multer from 'multer';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RoleGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -40,14 +39,12 @@ export class ProductController {
         { name: 'thumbnail', maxCount: 1 },
         { name: 'images', maxCount: 5 },
       ],
-      { storage: memoryStorage() },
+      { storage: multer.memoryStorage() },
     ),
   )
   async createProduct(
     // 1️⃣ Get files first
-    @UploadedFiles()
-    files: { thumbnail?: Express.Multer['File'][]; images?: Express.Multer['File'][] },
-
+    @UploadedFiles() files: { thumbnail?: Express.Multer.File[]; images?: Express.Multer.File[] },
     // 2️⃣ Then body
     @Body() createProductDto: any,
 
@@ -99,12 +96,12 @@ export class ProductController {
         { name: 'thumbnail', maxCount: 1 },
         { name: 'images', maxCount: 5 },
       ],
-      { storage: memoryStorage() },
+      { storage: multer.memoryStorage() },
     ),
   )
   async updateProduct(
     @Query('id') id: number,
-    @UploadedFiles() files: { thumbnail?: Express.Multer['File'][]; images?: Express.Multer['File'][] },
+    @UploadedFiles() files: { thumbnail?: Express.Multer.File[]; images?: Express.Multer.File[] },
     @Body() updateProductDto: any,
   ) {
     const thumbnail = files.thumbnail?.[0];

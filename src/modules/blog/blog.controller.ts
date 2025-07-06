@@ -23,11 +23,11 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from 'src/types/express-request.interface';
 import { CloudinaryService } from 'src/common/services/cloudinary.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import multer from 'multer';
 import { Blog } from './entities/blog.entity';
 import { ApiResponseInterceptor } from 'src/common/interceptors/api-response.interceptor';
 import { PaginationInterceptor } from 'src/common/interceptors/pagination.interceptor';
 import { commonQueryDto } from './dto/blog-query.dto';
+import { memoryStorage } from 'multer';
 
 @Controller('blog')
 @UseInterceptors(ApiResponseInterceptor, PaginationInterceptor)
@@ -39,7 +39,7 @@ export class BlogController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RoleGuard)
-  @UseInterceptors(FileInterceptor('image', { storage: multer.memoryStorage() }))
+  @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
   @Roles(UserRole.ADMIN)
   async createBlog(
     @Body() createBlogDto: CreateBlogDto,
@@ -83,7 +83,7 @@ export class BlogController {
 
   @Put('/:id')
   @UseGuards(JwtAuthGuard, RoleGuard)
-  @UseInterceptors(FileInterceptor('image', { storage: multer.memoryStorage() })) // Use FileInterceptor to handle image upload
+  @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() })) // Use FileInterceptor to handle image upload
   @Roles(UserRole.ADMIN)
   async updateBlog(
     @Param('id') id: string, // Get the blog ID from URL

@@ -1,8 +1,10 @@
 import { File } from 'multer';
 
+import 'multer';
+
 declare module 'multer' {
   interface Multer {
-    memoryStorage(): any;
+    memoryStorage: () => any;
   }
 }
 

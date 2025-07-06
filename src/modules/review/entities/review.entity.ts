@@ -13,10 +13,10 @@ export class Review {
   @Column({ type: 'int', default: 0 })
   rating: number;
 
-  @ManyToOne(() => Product, (product) => product.reviews, { eager: true })
+  @ManyToOne(() => Product, (product) => product.reviews, {})
   product: Product;
 
-  @ManyToOne(() => User, (user) => user.reviews, { eager: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.reviews, { onDelete: 'CASCADE' })
   user: User;
 
   @CreateDateColumn()

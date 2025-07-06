@@ -11,6 +11,8 @@ import { ContactModule } from './modules/contact/contact.module';
 import { TagModule } from './modules/tag/tag.module';
 import { ProductModule } from './modules/product/product.module';
 import { ReviewModule } from './modules/review/review.module';
+import { CartModule } from './modules/cart/cart.module';
+import { ShipmentModule } from './modules/shipment/shipment.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { ReviewModule } from './modules/review/review.module';
     TagModule,
     ProductModule,
     ReviewModule,
+    CartModule,
+    ShipmentModule,
   ],
   // providers: [IsUniqueConstraint],
   // controllers: [UsersController],

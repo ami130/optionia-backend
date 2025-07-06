@@ -4,6 +4,8 @@ import * as bcrypt from 'bcrypt';
 import { Blog } from 'src/modules/blog/entities/blog.entity';
 import { Exclude } from 'class-transformer';
 import { Review } from 'src/modules/review/entities/review.entity';
+import { Cart } from 'src/modules/review/entities/cart.entity';
+import { ShippingAddress } from 'src/modules/shipment/entities/shipping-address.entity';
 
 @Entity('users')
 @Unique(['email'])
@@ -34,6 +36,12 @@ export class User {
 
   @OneToMany(() => Review, (review) => review.user, { eager: true, cascade: true })
   reviews: Review[];
+
+  @OneToMany(() => Cart, (cart) => cart.user, { eager: true, cascade: true })
+  carts: Cart[];
+
+  @OneToMany(() => ShippingAddress, (address) => address.user, { cascade: true })
+  addresses: ShippingAddress[];
 
   @BeforeInsert()
   @BeforeUpdate()

@@ -23,11 +23,12 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from 'src/types/express-request.interface';
 import { CloudinaryService } from 'src/common/services/cloudinary.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import * as multer from 'multer';
+const memoryStorage = multer.memoryStorage;
 import { Blog } from './entities/blog.entity';
 import { ApiResponseInterceptor } from 'src/common/interceptors/api-response.interceptor';
 import { PaginationInterceptor } from 'src/common/interceptors/pagination.interceptor';
 import { commonQueryDto } from './dto/blog-query.dto';
-import { memoryStorage } from 'multer';
 
 @Controller('blog')
 @UseInterceptors(ApiResponseInterceptor, PaginationInterceptor)

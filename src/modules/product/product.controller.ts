@@ -16,6 +16,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import * as multer from 'multer';
+const memoryStorage = multer.memoryStorage;
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RoleGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -24,7 +26,6 @@ import { AuthenticatedRequest } from 'src/types/express-request.interface';
 import { ProductService } from './product.service';
 import { commonQueryDto } from '../blog/dto/blog-query.dto';
 import { Product } from './entities/products.entity';
-import { memoryStorage } from 'multer';
 
 @Controller('product')
 export class ProductController {

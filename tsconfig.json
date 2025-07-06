@@ -20,9 +20,9 @@
     "noFallthroughCasesInSwitch": false,
 
     "moduleResolution": "node",
-    "esModuleInterop": true,
-     "typeRoots": ["./node_modules/@types", "./src/types"],
+    "esModuleInterop": true, 
     "types": ["node", "express", "multer"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
       
   }
 }

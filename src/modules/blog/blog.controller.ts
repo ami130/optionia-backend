@@ -43,7 +43,7 @@ export class BlogController {
   @Roles(UserRole.ADMIN)
   async createBlog(
     @Body() createBlogDto: CreateBlogDto,
-    @UploadedFile() file: Express.Multer['File'],
+    @UploadedFile() file: Express.Multer.File,
     @Req() req: AuthenticatedRequest,
   ) {
     const userId = req.user;
@@ -88,7 +88,7 @@ export class BlogController {
   async updateBlog(
     @Param('id') id: string, // Get the blog ID from URL
     @Body() updateBlogDto: CreateBlogDto, // The updated blog data (title, description, etc.)
-    @UploadedFile() file: Express.Multer['File'], // Optional: The uploaded image (if any)
+    @UploadedFile() file: Express.Multer.File, // Optional: The uploaded image (if any)
     @Req() req: AuthenticatedRequest,
   ): Promise<any> {
     const userId = req.user; // Get the user from the request

@@ -15,7 +15,7 @@ export class CloudinaryService {
     });
   }
 
-  uploadImage(file: Express.Multer['File'], folder = 'uploads'): Promise<UploadApiResponse> {
+  uploadImage(file: Express.Multer.File, folder = 'uploads'): Promise<UploadApiResponse> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         { folder },

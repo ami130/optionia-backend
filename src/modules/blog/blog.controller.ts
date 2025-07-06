@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import type { Request } from 'express';
 import {
   Body,
   Controller,
@@ -88,6 +89,7 @@ export class BlogController {
   async updateBlog(
     @Param('id') id: string, // Get the blog ID from URL
     @Body() updateBlogDto: CreateBlogDto, // The updated blog data (title, description, etc.)
+
     @UploadedFile() file: Express.Multer.File, // Optional: The uploaded image (if any)
     @Req() req: AuthenticatedRequest,
   ): Promise<any> {

@@ -33,8 +33,8 @@ export class ProductService {
 
   async createProduct(
     createProductDto: CreateProductDto,
-    thumbnail: Express.Multer.File,
-    images: Express.Multer.File[],
+    thumbnail: Express.Multer['File'],
+    images: Express.Multer['File'][],
     userId: number,
   ): Promise<Product> {
     try {
@@ -198,8 +198,8 @@ export class ProductService {
   async updateProduct(
     id: number,
     updateProductDto: Partial<CreateProductDto>,
-    thumbnail?: Express.Multer.File,
-    images?: Express.Multer.File[],
+    thumbnail?: Express.Multer['File'],
+    images?: Express.Multer['File'][],
   ): Promise<Product> {
     const product = await this.productRepository.findOne({
       where: { id },

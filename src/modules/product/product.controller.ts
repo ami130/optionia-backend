@@ -45,7 +45,7 @@ export class ProductController {
   async createProduct(
     // 1️⃣ Get files first
     @UploadedFiles()
-    files: { thumbnail?: Express.Multer.File[]; images?: Express.Multer.File[] },
+    files: { thumbnail?: Express.Multer['File'][]; images?: Express.Multer['File'][] },
 
     // 2️⃣ Then body
     @Body() createProductDto: any,
@@ -103,7 +103,7 @@ export class ProductController {
   )
   async updateProduct(
     @Query('id') id: number,
-    @UploadedFiles() files: { thumbnail?: Express.Multer.File[]; images?: Express.Multer.File[] },
+    @UploadedFiles() files: { thumbnail?: Express.Multer['File'][]; images?: Express.Multer['File'][] },
     @Body() updateProductDto: any,
   ) {
     const thumbnail = files.thumbnail?.[0];

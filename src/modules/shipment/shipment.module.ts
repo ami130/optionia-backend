@@ -1,9 +1,13 @@
 import { Module } from '@nestjs/common';
-import { ShipmentController } from './shipment.controller';
-import { ShipmentService } from './shipment.service';
+import { ShippingAddressController } from './shipment.controller';
+import { ShippingAddressService } from './shipment.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ShippingAddress } from './entities/shipping-address.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Module({
-  controllers: [ShipmentController],
-  providers: [ShipmentService]
+  imports: [TypeOrmModule.forFeature([ShippingAddress, User])],
+  controllers: [ShippingAddressController],
+  providers: [ShippingAddressService],
 })
 export class ShipmentModule {}

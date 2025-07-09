@@ -30,7 +30,6 @@ import { ApiResponseInterceptor } from 'src/common/interceptors/api-response.int
 import { PaginationInterceptor } from 'src/common/interceptors/pagination.interceptor';
 import { commonQueryDto } from './dto/blog-query.dto';
 
-
 @Controller('blog')
 @UseInterceptors(ApiResponseInterceptor, PaginationInterceptor)
 export class BlogController {

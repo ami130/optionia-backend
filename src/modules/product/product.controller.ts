@@ -28,6 +28,9 @@ import { ProductService } from './product.service';
 import { commonQueryDto } from '../blog/dto/blog-query.dto';
 import { Product } from './entities/products.entity';
 
+import { Express } from 'express';
+import 'multer'; // This import extends the Express namespace with Multer types
+
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}

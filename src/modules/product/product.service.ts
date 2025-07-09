@@ -13,6 +13,9 @@ import { Tag } from '../tag/entities/tag.entity';
 import { generateSlug } from 'src/helper/generateSlug';
 import { commonQueryDto } from '../blog/dto/blog-query.dto';
 
+import { Express } from 'express';
+import 'multer'; // This import extends the Express namespace with Multer types
+
 @Injectable()
 export class ProductService {
   constructor(

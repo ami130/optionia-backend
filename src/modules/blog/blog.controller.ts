@@ -30,6 +30,9 @@ import { ApiResponseInterceptor } from 'src/common/interceptors/api-response.int
 import { PaginationInterceptor } from 'src/common/interceptors/pagination.interceptor';
 import { commonQueryDto } from './dto/blog-query.dto';
 
+import { Express } from 'express';
+import 'multer'; // This import extends the Express namespace with Multer types
+
 @Controller('blog')
 @UseInterceptors(ApiResponseInterceptor, PaginationInterceptor)
 export class BlogController {

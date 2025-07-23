@@ -13,13 +13,13 @@ export class ContactController {
   constructor(private contactService: ContactService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  @Roles(UserRole.ADMIN)
   async createContact(@Body() createContactDto: createContactDto): Promise<Contact> {
     return this.contactService.createContact(createContactDto);
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(UserRole.ADMIN)
   async getAllContact(@Query() query: commonQueryDto): Promise<{ data: Contact[]; count: number }> {
     return this.contactService.getAllContact(query);
   }

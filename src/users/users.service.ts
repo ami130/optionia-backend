@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
+import { UserRole } from './enum/userRole.enum';
 
 @Injectable()
 export class UsersService {
@@ -31,6 +32,30 @@ export class UsersService {
     // If checks pass, create the user
     const user = this.userRepository.create(createUserDto);
     return this.userRepository.save(user);
+  }
+
+  // users.service.ts
+  async seedAdminUser() {
+    const adminEmail = 'admin@example.com';
+    const adminUsername = 'admin';
+
+    const existingAdmin = await this.userRepository.findOne({
+      where: { email: adminEmail },
+    });
+
+    if (!existingAdmin) {
+      const adminUser = this.userRepository.create({
+        username: adminUsername,
+        email: adminEmail,
+        password: 'admin123',
+        role: UserRole.ADMIN,
+      });
+
+      await this.userRepository.save(adminUser);
+      console.log('✅ Admin user seeded');
+    } else {
+      console.log('ℹ️ Admin user already exists');
+    }
   }
 
   async findByProperty(property: string, value: any): Promise<User | null> {

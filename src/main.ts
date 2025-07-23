@@ -7,6 +7,7 @@ import { ApiResponseInterceptor } from './common/interceptors/api-response.inter
 import { ClassSerializerInterceptor, ValidationPipe, Logger } from '@nestjs/common';
 import * as bodyParser from 'body-parser';
 import { ConfigService } from '@nestjs/config';
+import { UsersService } from './users/users.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -32,6 +33,9 @@ async function bootstrap() {
       },
     }),
   );
+
+  const usersService = app.get(UsersService);
+  await usersService.seedAdminUser();
 
   // Global interceptors
   const reflector = app.get(Reflector);
@@ -61,7 +65,8 @@ async function bootstrap() {
   // }
 
   // Start application
-  await app.listen(PORT);
+  // await app.listen(PORT);
+  await app.listen(process.env.PORT || 3000, '0.0.0.0');
   logger.log(`Application running on port ${PORT} in ${NODE_ENV} mode`);
 }
 

@@ -3,9 +3,9 @@
 import { Injectable } from '@nestjs/common';
 import {
   ApiResponse,
-  AuthTokenResponse,
   PaginatedApiResponse,
   ErrorResponse,
+  AuthTokenResponseWithUser,
 } from '../interfaces/api-response.interface';
 
 @Injectable()
@@ -46,15 +46,27 @@ export class ResponseService {
     };
   }
 
-  authSuccess(accessToken: string, expiresIn: number, refreshToken?: string): ApiResponse<AuthTokenResponse> {
-    const responseData: AuthTokenResponse = {
+  authSuccess(
+    accessToken: string,
+    expiresIn: number,
+    user: { id: number; username: string; email: string; role: string },
+    refreshToken?: string,
+  ): ApiResponse<AuthTokenResponseWithUser> {
+    const responseData: AuthTokenResponseWithUser = {
       access_token: accessToken,
       expires_in: expiresIn,
       token_type: 'Bearer',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+      refresh_token: '',
     };
 
     if (refreshToken) {
-      (responseData as any).refresh_token = refreshToken;
+      responseData.refresh_token = refreshToken;
     }
 
     return this.success(responseData, 'Authentication successful');

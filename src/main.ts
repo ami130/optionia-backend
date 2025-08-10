@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable prettier/prettier */
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -13,6 +14,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
+
+  logger.debug(`DB_HOST: ${configService.get('DB_HOST')}`);
+  logger.debug(`NODE_ENV: ${configService.get('NODE_ENV')}`);
 
   // Enhanced configuration
   const PORT = configService.get<number>('PORT') || 3000;
@@ -34,8 +38,19 @@ async function bootstrap() {
     }),
   );
 
-  const usersService = app.get(UsersService);
-  await usersService.seedAdminUser();
+  try {
+    const usersService = app.get(UsersService);
+    await usersService.seedAdminUser();
+  } catch (error) {
+    if (error.code !== '23505') {
+      // Ignore duplicate user errors
+      throw error;
+    }
+    logger.warn('Admin user already exists, skipping creation');
+  }
+
+  // const usersService = app.get(UsersService);
+  // await usersService.seedAdminUser();
 
   // Global interceptors
   const reflector = app.get(Reflector);

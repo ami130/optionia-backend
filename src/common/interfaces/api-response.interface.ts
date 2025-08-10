@@ -25,6 +25,19 @@ export interface AuthTokenResponse {
   token_type: string;
 }
 
+export interface AuthTokenResponseWithUser extends AuthTokenResponse {
+  refresh_token: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    role: string;
+  };
+  access_token: string;
+  expires_in: number;
+  token_type: string;
+}
+
 export interface ErrorResponse {
   error?: string;
   details?: Record<string, any>;

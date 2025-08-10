@@ -29,13 +29,23 @@ export class AuthService {
 
   async login(user: User) {
     try {
-      const payload = { email: user.email, sub: user.id, role: user.role };
+      const payload = {
+        email: user.email,
+        sub: user.id,
+        role: user.role,
+      };
       const accessToken = this.jwtService.sign(payload);
 
-      // Standardized response with token expiration
       return this.responseService.authSuccess(
         accessToken,
-        3600, // expires in 1 hour (in seconds)
+        3600, // expires in 1 hour
+        {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
+        // Add refreshToken here if you're using it
       );
     } catch (error) {
       throw new UnauthorizedException('Could not generate token');

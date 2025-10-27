@@ -24,12 +24,12 @@ export class CartService {
     if (!product) throw new NotFoundException('Product not found');
 
     let cart = await this.cartRepository.findOne({
-      where: { user: { id: userId } },
+      where: {},
       relations: ['items', 'items.product'],
     });
 
     if (!cart) {
-      cart = this.cartRepository.create({ user, items: [] });
+      cart = this.cartRepository.create({ items: [] });
     }
 
     const existingItem = cart.items.find((item) => item.product.id === dto.productId);
@@ -50,7 +50,7 @@ export class CartService {
 
   async getCart(userId: number) {
     const cart = await this.cartRepository.findOne({
-      where: { user: { id: userId } },
+      where: {},
       relations: ['items', 'items.product'],
     });
     if (!cart) throw new NotFoundException('Cart not found');
@@ -60,7 +60,7 @@ export class CartService {
 
   async clearCart(userId: number): Promise<void> {
     const cart = await this.cartRepository.findOne({
-      where: { user: { id: userId } },
+      where: {},
       relations: ['items'],
     });
 
@@ -72,7 +72,7 @@ export class CartService {
 
   async removeCartItem(userId: number, cartItemId: number) {
     const cart = await this.cartRepository.findOne({
-      where: { user: { id: userId } },
+      where: {},
       relations: ['items', 'items.product'],
     });
 

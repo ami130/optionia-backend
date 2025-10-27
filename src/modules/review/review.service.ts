@@ -26,7 +26,7 @@ export class ReviewService {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    const review = this.reviewRepository.create({ ...dto, product, user });
+    const review = this.reviewRepository.create({ ...dto, product });
     return this.reviewRepository.save(review);
   }
 

@@ -28,9 +28,13 @@ export class AuthController {
 
   @Post('signup')
   async signup(@Body() createUserDto: CreateUserDto) {
-    const user = await this.usersService.create(createUserDto);
+    const user = await this.usersService.createUser(createUserDto);
 
     const { password, ...result } = user;
-    return result;
+
+    return {
+      ...result,
+      role: "role?.name", // ✅ return role name as string
+    };
   }
 }

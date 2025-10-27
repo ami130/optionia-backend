@@ -7,8 +7,7 @@ export class Cart {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.carts)
-  user: User;
+
 
   @OneToMany(() => CartItem, (item) => item.cart, { cascade: true })
   items: CartItem[]; // Renamed from items to item for singular form

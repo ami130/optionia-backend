@@ -12,10 +12,29 @@ import { TagModule } from './modules/tag/tag.module';
 import { ProductModule } from './modules/product/product.module';
 import { ReviewModule } from './modules/review/review.module';
 import { CartModule } from './modules/cart/cart.module';
-import { ShipmentModule } from './modules/shipment/shipment.module';
+import { WebsiteModule } from './modules/website/website.module';
+import { PagesModule } from './modules/pages/pages.module';
+import { UploadsController } from './modules/uploads/uploads.controller';
+import { UploadsService } from './modules/uploads/uploads.service';
+import { UploadsModule } from './modules/uploads/Upload.moudle';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { WebsiteDataModule } from './modules/website-data/website-data.module';
+import { SectionModule } from './modules/sections/sections.module';
+import { RolesModule } from './roles/roles.module';
+import { PermissionsModule } from './permissions/permissions.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/public',
+    }),
+
+    //    ServeStaticModule.forRoot({
+    //   rootPath: join(__dirname, '..', 'public'), // public folder
+    //   serveRoot: '/public', // URL prefix
+    // }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -29,8 +48,16 @@ import { ShipmentModule } from './modules/shipment/shipment.module';
     ProductModule,
     ReviewModule,
     CartModule,
-    ShipmentModule,
+    WebsiteModule,
+    PagesModule,
+    UploadsModule,
+    WebsiteDataModule,
+    SectionModule,
+    RolesModule,
+    PermissionsModule,
   ],
+  controllers: [UploadsController],
+  providers: [UploadsService],
   // providers: [IsUniqueConstraint],
   // controllers: [UsersController],
   // providers: [UsersService],

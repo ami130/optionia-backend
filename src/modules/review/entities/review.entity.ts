@@ -16,8 +16,7 @@ export class Review {
   @ManyToOne(() => Product, (product) => product.reviews, {})
   product: Product;
 
-  @ManyToOne(() => User, (user) => user.reviews, { onDelete: 'CASCADE' })
-  user: User;
+ 
 
   @CreateDateColumn()
   createdAt: Date;

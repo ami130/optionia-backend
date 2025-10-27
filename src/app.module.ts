@@ -23,6 +23,7 @@ import { WebsiteDataModule } from './modules/website-data/website-data.module';
 import { SectionModule } from './modules/sections/sections.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
+import { TermsConditionsModule } from './modules/terms-conditions/terms-conditions.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { PermissionsModule } from './permissions/permissions.module';
     SectionModule,
     RolesModule,
     PermissionsModule,
+    TermsConditionsModule,
   ],
   controllers: [UploadsController],
   providers: [UploadsService],

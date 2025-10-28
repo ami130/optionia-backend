@@ -15,7 +15,7 @@ import {
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { WebsiteDataService } from './website-data.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RoleGuard } from 'src/auth/guards/roles.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enum/userRole.enum';
 import { UploadsService } from '../uploads/uploads.service';
@@ -41,7 +41,7 @@ export class WebsiteDataController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @UseInterceptors(
     AnyFilesInterceptor({
@@ -64,7 +64,7 @@ export class WebsiteDataController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @UseInterceptors(
     AnyFilesInterceptor({
@@ -95,7 +95,7 @@ export class WebsiteDataController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   delete(@Param('id') id: string) {
     return this.websiteDataService.delete(+id);
@@ -126,7 +126,7 @@ export class WebsiteDataController {
 //   }
 
 //   @Post()
-//   @UseGuards(JwtAuthGuard, RoleGuard)
+//   @UseGuards(JwtAuthGuard, RolesGuard)
 //   @Roles(UserRole.ADMIN)
 //   @UseInterceptors(
 //     AnyFilesInterceptor({
@@ -146,7 +146,7 @@ export class WebsiteDataController {
 //   }
 
 //   @Patch(':id')
-//   @UseGuards(JwtAuthGuard, RoleGuard)
+//   @UseGuards(JwtAuthGuard, RolesGuard)
 //   @Roles(UserRole.ADMIN)
 //   @UseInterceptors(
 //     AnyFilesInterceptor({
@@ -173,7 +173,7 @@ export class WebsiteDataController {
 //   }
 
 //   @Delete(':id')
-//   @UseGuards(JwtAuthGuard, RoleGuard)
+//   @UseGuards(JwtAuthGuard, RolesGuard)
 //   @Roles(UserRole.ADMIN)
 //   delete(@Param('id') id: string) {
 //     return this.websiteDataService.delete(+id);

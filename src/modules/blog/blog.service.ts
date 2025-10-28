@@ -15,7 +15,7 @@ export class BlogService {
   ) {}
 
   async create(data: CreateBlogDto, user: User) {
-    const blog = this.blogRepo.create({ ...data, author: user });
+    const blog = this.blogRepo.create({ ...data });
     return this.blogRepo.save(blog);
   }
 

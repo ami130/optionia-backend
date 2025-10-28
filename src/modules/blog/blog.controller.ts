@@ -1,64 +1,65 @@
-// src/modules/blog/blog.controller.ts
 import {
   Controller,
   Post,
   Patch,
-  Delete,
-  Get,
-  Param,
+  UploadedFiles,
   Body,
+  Req,
   UseGuards,
   UseInterceptors,
-  UploadedFile,
+  Param,
   BadRequestException,
-  Req,
+  Get,
+  Delete,
 } from '@nestjs/common';
 import { BlogService } from './blog.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { PermissionGuard } from 'src/auth/guards/permission.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Permissions } from 'src/permissions/decorators/permissions.decorator';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
-import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { UploadsService } from '../uploads/uploads.service';
-import { Permissions } from 'src/permissions/decorators/permissions.decorator';
-import { RoleGuard } from 'src/auth/guards/roles.guard';
-import { PermissionGuard } from 'src/auth/guards/permission.guard';
 
 @Controller('blogs')
 export class BlogController {
+  private readonly uploadInterceptor;
+
   constructor(
     private readonly blogService: BlogService,
-    private readonly uploadsService: UploadsService,
-  ) {}
+    // private readonly uploadsService: UploadsService,
+  ) {
+    // ✅ initialize interceptor **inside constructor**, not in decorator
+    // this.uploadInterceptor = createUploadInterceptor(this.uploadsService);
+  }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RoleGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionGuard)
   @Roles('admin', 'editor')
   @Permissions('create_blog')
-  @UseInterceptors(
-    AnyFilesInterceptor({
-      storage: new UploadsService().getFileStorage(),
-      fileFilter: new UploadsService().fileFilter,
-    }),
-  )
-  async create(@UploadedFile() file: Express.Multer.File, @Body() data: CreateBlogDto, @Req() req: any) {
-    if (file) data.image = file.filename;
+  // @UseInterceptors(
+  //   function (req, res, next) {
+  //     return this.uploadInterceptor(req, res, next);
+  //   }.bind(this),
+  // ) // ✅ bind 'this' to access uploadInterceptor
+  async create(@UploadedFiles() files: Express.Multer.File[], @Body() data: CreateBlogDto, @Req() req: any) {
+    // this.uploadsService.mapFilesToData(files, data, ['image']);
     if (!data.title || !data.content) throw new BadRequestException('Title and content required');
     return this.blogService.create(data, req.user);
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionGuard)
   @Roles('admin', 'editor')
   @Permissions('update_blog')
-  @UseInterceptors(
-    AnyFilesInterceptor({
-      storage: new UploadsService().getFileStorage(),
-      fileFilter: new UploadsService().fileFilter,
-    }),
-  )
-  async update(@Param('id') id: string, @UploadedFile() file: Express.Multer.File, @Body() data: UpdateBlogDto) {
-    if (file) data.image = file.filename;
+  // @UseInterceptors(
+  //   function (req, res, next) {
+  //     return this.uploadInterceptor(req, res, next);
+  //   }.bind(this),
+  // )
+  async update(@Param('id') id: string, @UploadedFiles() files: Express.Multer.File[], @Body() data: UpdateBlogDto) {
+    // this.uploadsService.mapFilesToData(files, data, ['image']);
     return this.blogService.update(+id, data);
   }
 
@@ -73,7 +74,7 @@ export class BlogController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionGuard)
   @Roles('admin')
   @Permissions('delete_blog')
   async delete(@Param('id') id: string) {

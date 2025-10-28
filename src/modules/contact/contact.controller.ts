@@ -4,7 +4,7 @@ import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@n
 import { Contact } from './entities/contact.entity';
 import { commonQueryDto } from '../blog/dto/blog-query.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RoleGuard } from 'src/auth/guards/roles.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enum/userRole.enum';
 
@@ -18,14 +18,14 @@ export class ContactController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   async getAllContact(@Query() query: commonQueryDto): Promise<{ data: Contact[]; count: number }> {
     return this.contactService.getAllContact(query);
   }
 
   @Delete('/:id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   async deleteBlog(@Param('id') id: string): Promise<any> {
     return await this.contactService.deleteContact(+id);

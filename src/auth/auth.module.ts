@@ -26,6 +26,7 @@ import { CommonModule } from 'src/common/common.module';
       inject: [ConfigService],
     }),
     UsersModule,
+
     CommonModule,
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],

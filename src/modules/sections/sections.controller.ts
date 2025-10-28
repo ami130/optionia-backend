@@ -14,7 +14,7 @@ import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { CreateSectionDto, UpdateSectionDto } from './dto/section.dto';
 import { UploadsService } from '../uploads/uploads.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RoleGuard } from 'src/auth/guards/roles.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enum/userRole.enum';
 import { SectionService } from './sections.service';
@@ -41,7 +41,7 @@ export class SectionController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @UseInterceptors(
     AnyFilesInterceptor({
@@ -55,7 +55,7 @@ export class SectionController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @UseInterceptors(
     AnyFilesInterceptor({
@@ -73,7 +73,7 @@ export class SectionController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   delete(@Param('id') id: string) {
     return this.sectionService.delete(+id);

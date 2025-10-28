@@ -11,10 +11,18 @@ import { ApiResponseInterceptor } from './common/interceptors/api-response.inter
 import { ClassSerializerInterceptor, ValidationPipe, Logger, BadRequestException } from '@nestjs/common';
 import * as bodyParser from 'body-parser';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from './users/users.service';
+import { SeederService } from './seeder/seeder.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const seeder = app.get(SeederService);
+  try {
+    await seeder.seed();
+  } catch (error) {
+    console.warn('Seeding skipped or failed:', error.message);
+  }
+
   const configService = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
@@ -29,25 +37,33 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
-  // ✅ Global validation pipes
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
       transformOptions: { enableImplicitConversion: true },
-      exceptionFactory: (errors) => new BadRequestException(errors),
+      exceptionFactory: (errors) => {
+        const messages = errors.map((err) => {
+          const constraints = err.constraints
+            ? Object.values(err.constraints).join(', ')
+            : 'validation error';
+          return `${err.property} - ${constraints}`;
+        });
+        return new BadRequestException(messages);
+      },
     }),
   );
 
   // ✅ Auto-seed Admin User (safe)
-  try {
-    const usersService = app.get(UsersService);
-    await usersService.seedAdminUser();
-  } catch (error) {
-    if ((error as any).code !== '23505') throw error;
-    logger.warn('Admin user already exists, skipping creation');
-  }
+
+  // try {
+  //   const seeder = app.get(SeederService);
+  //   await seeder.seed();
+  // } catch (error) {
+  //   if ((error as any).code !== '23505') throw error;
+  //   logger.warn('Admin user already exists, skipping creation');
+  // }
 
   // ✅ Global interceptors and filters
   const reflector = app.get(Reflector);

@@ -24,6 +24,9 @@ import { SectionModule } from './modules/sections/sections.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { TermsConditionsModule } from './modules/terms-conditions/terms-conditions.module';
+import { ModulesModule } from './roles/modules/modules.module';
+import { SharedModule } from './shared-module/shared-module.module';
+import { SeederModule } from './seeder/seeder.module';
 
 @Module({
   imports: [
@@ -57,6 +60,10 @@ import { TermsConditionsModule } from './modules/terms-conditions/terms-conditio
     RolesModule,
     PermissionsModule,
     TermsConditionsModule,
+    ModulesModule,
+    SharedModule,
+    SeederModule,
+    
   ],
   controllers: [UploadsController],
   providers: [UploadsService],

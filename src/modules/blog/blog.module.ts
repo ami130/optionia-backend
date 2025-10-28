@@ -4,12 +4,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BlogService } from './blog.service';
 import { BlogController } from './blog.controller';
 import { Blog } from './entities/blog.entity';
-import { User } from 'src/users/entities/user.entity';
-import { CommonModule } from 'src/common/common.module';
+import { SharedModule } from 'src/shared-module/shared-module.module';
 import { UploadsModule } from '../uploads/Upload.moudle';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Blog, User]), CommonModule, UploadsModule],
+  imports: [
+    SharedModule, // ✅ now PermissionGuard + RMP repo are available
+    TypeOrmModule.forFeature([Blog]),
+    UploadsModule, // your module-specific entities
+  ],
   providers: [BlogService],
   controllers: [BlogController],
 })

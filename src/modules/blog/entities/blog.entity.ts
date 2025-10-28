@@ -17,8 +17,8 @@ export class Blog {
   @Column({ nullable: true })
   image?: string;
 
-  @ManyToOne(() => User, (user) => user.blogs, { eager: true })
-  author: User;
+  // @ManyToOne(() => User, (user) => user.blogs, { eager: true })
+  // author: User;
 
   @CreateDateColumn()
   createdAt: Date;

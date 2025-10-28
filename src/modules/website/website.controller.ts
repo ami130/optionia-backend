@@ -3,9 +3,9 @@ import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards } from '@n
 import { WebsiteService } from './website.service';
 import { CreatePageDto, UpdatePageDto } from './dto/page.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RoleGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enum/userRole.enum';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Controller('websitedata')
 export class WebsiteController {
@@ -15,7 +15,7 @@ export class WebsiteController {
    ** ✅ Create a new page
    * Admins only
    */
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Post()
   async create(@Body() dto: CreatePageDto) {
@@ -44,7 +44,7 @@ export class WebsiteController {
    * ✅ Update page by key
    * Admins only
    */
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Patch(':key')
   async update(@Param('key') key: string, @Body() dto: UpdatePageDto) {
@@ -55,7 +55,7 @@ export class WebsiteController {
    * ✅ Delete page by key
    * Admins only
    */
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Delete(':key')
   async remove(@Param('key') key: string) {

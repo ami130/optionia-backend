@@ -6,13 +6,14 @@ import { ValidateUserDto } from './dto/validate-user.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService, private usersService: UsersService) {}
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ) {}
 
   @Post('signup')
   async signup(@Body() dto: CreateUserDto) {
     const user = await this.usersService.create(dto);
-    // return user without password
-    // don't sign JWT automatically if you want email verification; here we will log in
     const { password, ...rest } = user as any;
     const token = await this.authService.login(rest);
     return token;
@@ -25,9 +26,6 @@ export class AuthController {
     return this.authService.login(validated as any);
   }
 }
-
-
-
 
 // /* eslint-disable @typescript-eslint/no-unused-vars */
 // import { Controller, Post, Body, UseGuards, UnauthorizedException } from '@nestjs/common';

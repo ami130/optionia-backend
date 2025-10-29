@@ -31,8 +31,36 @@ export class ModulesService {
   }
 
   async findAll() {
-    return this.moduleRepo.find();
+    const modules = await this.moduleRepo.find({
+      relations: ['roleModulePermissions', 'roleModulePermissions.permission'],
+    });
+
+    return modules.map((mod) => {
+      // Deduplicate permissions by ID
+      const permissionMap = new Map<number, any>();
+      for (const rmp of mod.roleModulePermissions) {
+        if (!permissionMap.has(rmp.permission.id)) {
+          permissionMap.set(rmp.permission.id, {
+            id: rmp.permission.id,
+            name: rmp.permission.name,
+            slug: rmp.permission.slug,
+            createdAt: rmp.permission.createdAt,
+            updatedAt: rmp.permission.updatedAt,
+          });
+        }
+      }
+
+      return {
+        id: mod.id,
+        name: mod.name,
+        slug: mod.slug,
+        createdAt: mod.createdAt,
+        updatedAt: mod.updatedAt,
+        permission: Array.from(permissionMap.values()),
+      };
+    });
   }
+
   async update(id: number, dto: UpdateModuleDto) {
     const mod = await this.moduleRepo.findOne({ where: { id } });
     if (!mod) {

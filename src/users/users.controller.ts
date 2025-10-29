@@ -5,8 +5,8 @@ import {
   UseGuards,
   Get,
   Req,
-  UseInterceptors,
-  ClassSerializerInterceptor,
+  Param,
+  Put,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -14,24 +14,45 @@ import { AssignRoleDto } from 'src/roles/dto/assign-role.dto';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 
-@UseInterceptors(ClassSerializerInterceptor)
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  // Assign role to user
   @Post('assign-role')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('admin')
   async assignRole(@Body() dto: AssignRoleDto) {
     return this.usersService.assignRole(dto.userId, dto.roleId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  // Get current user
   @Get('me')
   async me(@Req() req: any) {
     return this.usersService.findById(req.user.sub);
   }
+
+  // ✅ List all users
+  @Get()
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async findAll() {
+    return this.usersService.findAll();
+  }
+
+  // ✅ Update single user
+  @Put(':id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async update(
+    @Param('id') id: number,
+    @Body() body: { username?: string; email?: string; roleId?: number },
+  ) {
+    return this.usersService.updateUser(id, body);
+  }
 }
+
 
 // import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 // import { Roles } from 'src/auth/decorators/roles.decorator';

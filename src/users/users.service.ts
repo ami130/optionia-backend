@@ -63,6 +63,34 @@ export class UsersService {
     };
   }
 
+  // Find all users
+  async findAll() {
+    const users = await this.userRepo.find({ relations: ['role'] });
+    return users.map((u) => {
+      const { password, ...rest } = u;
+      return rest;
+    });
+  }
+
+  // Update single user
+  async updateUser(id: number, data: { username?: string; email?: string; roleId?: number }) {
+    const user = await this.userRepo.findOne({ where: { id }, relations: ['role'] });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (data.username) user.username = data.username;
+    if (data.email) user.email = data.email;
+
+    if (data.roleId) {
+      const role = await this.roleRepo.findOne({ where: { id: data.roleId } });
+      if (!role) throw new NotFoundException('Role not found');
+      user.role = role;
+    }
+
+    const updated = await this.userRepo.save(user);
+    const { password, ...userWithoutPassword } = updated;
+    return userWithoutPassword;
+  }
+
   async assignRole(userId: number, roleId: number) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');

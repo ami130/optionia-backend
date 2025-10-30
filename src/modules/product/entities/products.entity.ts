@@ -33,12 +33,7 @@ export class Product {
   @Column()
   details: string;
 
-  @ManyToMany(() => Tag, (tag) => tag.products, {
-    cascade: true,
-    eager: true,
-  })
-  @JoinTable()
-  tags: Tag[]; // ✅ Rename from `tagIds` to `tags`
+  // ✅ Rename from `tagIds` to `tags`
 
   // ✅ Use these exact names:
   @Column()

@@ -1,17 +1,9 @@
 import { Blog } from 'src/modules/blog/entities/blog.entity';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  ManyToMany,
-  PrimaryGeneratedColumn,
-  Unique,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 
-@Entity('tag')
+@Entity('categories')
 @Unique(['slug'])
-export class Tag {
+export class Category {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -21,7 +13,7 @@ export class Tag {
   @Column({ unique: true })
   slug: string;
 
-  @ManyToMany(() => Blog, (blog) => blog.category)
+  @OneToMany(() => Blog, (blog) => blog.category)
   blogs: Blog[];
 
   @CreateDateColumn()

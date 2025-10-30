@@ -10,11 +10,11 @@ import { CloudinaryService } from 'src/common/services/cloudinary.service';
 import { CreateProductDto } from './Dto/product.dto';
 import { User } from 'src/users/entities/user.entity';
 import { Tag } from '../tag/entities/tag.entity';
-import { generateSlug } from 'src/helper/generateSlug';
 import { commonQueryDto } from '../blog/dto/blog-query.dto';
 
 import { Express } from 'express';
 import 'multer'; // This import extends the Express namespace with Multer types
+import { slugify } from 'src/common/config/slugify';
 
 @Injectable()
 export class ProductService {
@@ -83,10 +83,9 @@ export class ProductService {
       // ✅ Step 6: Create the product
       const product = this.productRepository.create({
         ...createProductDto,
-        slug: generateSlug(createProductDto.title),
+        slug: slugify(createProductDto.title),
         thumbnailUrl: thumbnailUpload.secure_url,
         thumbnailPublicId: thumbnailUpload.public_id,
-        tags: tagEntities,
       });
 
       const savedProduct = await this.productRepository.save(product);
@@ -167,16 +166,10 @@ export class ProductService {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
-    if (!product.tags || product.tags.length === 0) {
-      return [];
-    }
-
-    const tagIds = product.tags.map((tag) => tag.id);
-
     const relatedProducts = await this.productRepository
       .createQueryBuilder('product')
       .leftJoin('product.tags', 'tag')
-      .where('tag.id IN (:...tagIds)', { tagIds })
+      .where('tag.id IN (:...tagIds)', {})
       .andWhere('product.id != :id', { id })
       .leftJoinAndSelect('product.tags', 'tags') // preload tags if needed
       .take(5)
@@ -222,7 +215,7 @@ export class ProductService {
         throw new BadRequestException('Another product with this title already exists');
       }
       product.title = updateProductDto.title;
-      product.slug = generateSlug(updateProductDto.title);
+      product.slug = slugify(updateProductDto.title);
     }
 
     // ✅ Update description, price, etc.
@@ -251,7 +244,6 @@ export class ProductService {
       if (tagEntities.length !== tagIds.length) {
         throw new NotFoundException('Some tag IDs are invalid');
       }
-      product.tags = tagEntities;
     }
 
     // ✅ Update thumbnail if provided

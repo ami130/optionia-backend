@@ -40,7 +40,15 @@ export class UsersService {
     return this.userRepo.findOne({ where: { email }, relations: ['role'] });
   }
 
-  async findById(id: number) {
+  // Add this method to find role with slug
+  async findRoleById(roleId: number) {
+    return this.roleRepo.findOne({
+      where: { id: roleId },
+      select: ['id', 'name', 'slug'], // Make sure to select slug
+    });
+  }
+
+  async findById(id: number, relations: string[] = []) {
     const user = await this.userRepo.findOne({ where: { id }, relations: ['role'] });
     if (!user) return null;
 

@@ -7,9 +7,14 @@ import { Permission } from 'src/roles/entities/permission.entity/permission.enti
 import { Role } from 'src/roles/entities/role.entity/role.entity';
 import { RoleModulePermission } from 'src/roles/entities/role-module-permission/role-module-permission.entity';
 import { UsersModule } from 'src/users/users.module';
+import { ModulesModule } from 'src/roles/modules/modules.module';
 
 @Module({
-  imports: [UsersModule, TypeOrmModule.forFeature([ModuleEntity, Permission, Role, RoleModulePermission])],
+  imports: [
+    UsersModule,
+    ModulesModule,
+    TypeOrmModule.forFeature([ModuleEntity, Permission, Role, RoleModulePermission]),
+  ],
   providers: [SeederService],
   exports: [SeederService],
 })

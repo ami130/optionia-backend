@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
-export class tagDto {
+export class CreateCategoryDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(120)
@@ -12,4 +12,4 @@ export class tagDto {
   slug?: string;
 }
 
-export class UpdateTagDto extends tagDto {}
+export class UpdateCategoryDto extends CreateCategoryDto {}

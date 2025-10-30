@@ -8,6 +8,7 @@ import { ModuleEntity } from 'src/roles/entities/module/module.entity';
 import { Permission } from 'src/roles/entities/permission.entity/permission.entity';
 import { Role } from 'src/roles/entities/role.entity/role.entity';
 import { RoleModulePermission } from 'src/roles/entities/role-module-permission/role-module-permission.entity';
+import { ModulesService } from 'src/roles/modules/modules.service'; // Import ModulesService
 
 @Injectable()
 export class SeederService {
@@ -18,7 +19,8 @@ export class SeederService {
     @InjectRepository(Permission) private permissionRepo: Repository<Permission>,
     @InjectRepository(Role) private roleRepo: Repository<Role>,
     @InjectRepository(RoleModulePermission) private rmpRepo: Repository<RoleModulePermission>,
-    private readonly usersService: UsersService, // ✅ UsersService injected properly
+    private readonly usersService: UsersService,
+    private readonly modulesService: ModulesService, // Inject ModulesService
   ) {}
 
   async seed() {
@@ -32,12 +34,9 @@ export class SeederService {
       }
     }
 
-    // Seed Blog Module
-    let blogModule = await this.modulesRepo.findOne({ where: { slug: 'blog' } });
-    if (!blogModule) {
-      blogModule = this.modulesRepo.create({ name: 'Blog', slug: 'blog' });
-      await this.modulesRepo.save(blogModule);
-    }
+    // ✅ Call seedBaseModules to create all modules
+    await this.modulesService.seedBaseModules();
+    this.logger.log('Base modules seeded ✅');
 
     // Seed Admin Role
     let adminRole = await this.roleRepo.findOne({ where: { slug: 'admin' } });
@@ -46,21 +45,41 @@ export class SeederService {
       await this.roleRepo.save(adminRole);
     }
 
-    // Assign all permissions to admin
-    const allPermissions = await this.permissionRepo.find();
-    for (const p of allPermissions) {
-      const exists = await this.rmpRepo.findOne({
-        where: { role: { id: adminRole.id }, module: { id: blogModule.id }, permission: { id: p.id } },
-      });
-      if (!exists) {
-        const rmp = this.rmpRepo.create({ role: adminRole, module: blogModule, permission: p });
-        await this.rmpRepo.save(rmp);
-      }
-    }
+    // ✅ Assign all permissions to admin for ALL modules
+    await this.assignAllPermissionsToAdmin(adminRole);
+    this.logger.log('Admin permissions assigned ✅');
 
     // Seed Admin User
     await this.usersService.seedAdmin('admin@example.com', 'admin123');
+    this.logger.log('Admin user seeded ✅');
 
-    this.logger.log('Seeding done ✅');
+    this.logger.log('All seeding completed successfully 🎉');
+  }
+
+  // Helper method to assign all permissions to admin for all modules
+  private async assignAllPermissionsToAdmin(adminRole: Role) {
+    const allPermissions = await this.permissionRepo.find();
+    const allModules = await this.modulesRepo.find();
+
+    for (const module of allModules) {
+      for (const permission of allPermissions) {
+        const exists = await this.rmpRepo.findOne({
+          where: { 
+            role: { id: adminRole.id }, 
+            module: { id: module.id }, 
+            permission: { id: permission.id } 
+          },
+        });
+        
+        if (!exists) {
+          const rmp = this.rmpRepo.create({ 
+            role: adminRole, 
+            module: module, 
+            permission: permission 
+          });
+          await this.rmpRepo.save(rmp);
+        }
+      }
+    }
   }
 }

@@ -1,23 +1,56 @@
-import { Controller, Post, Body, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UnauthorizedException,
+  UseInterceptors,
+  UploadedFile,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from 'src/users/users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ValidateUserDto } from './dto/validate-user.dto';
+import { Roles } from './decorators/roles.decorator';
+import { UploadsService } from 'src/modules/uploads/uploads.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { LocalAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
     private usersService: UsersService,
+    private readonly uploadsService: UploadsService,
   ) {}
 
   @Post('signup')
-  async signup(@Body() dto: CreateUserDto) {
-    const user = await this.usersService.create(dto);
-    const { password, ...rest } = user as any;
-    const token = await this.authService.login(rest);
-    return token;
+  @Roles('admin')
+  @UseInterceptors(
+    FileInterceptor('profileImage', {
+      storage: new UploadsService().getFileStorage(),
+      fileFilter: new UploadsService().fileFilter,
+    }),
+  )
+  async signup(@Body() dto: CreateUserDto, @UploadedFile() file?: Express.Multer.File) {
+    console.log('first', dto);
+    const user = await this.usersService.create(dto, file);
+    // const { password, ...rest } = user as any;
+    // const token = await this.authService.login(rest);
+    return user;
   }
+
+  // @Post('login')
+  // @UseGuards(LocalAuthGuard) // ✅ Use Passport local strategy
+  // async login(@Body() dto: ValidateUserDto) {
+  //   // LocalAuthGuard automatically validates user
+  //   // validated user is available in request.user
+  //   const validated = await this.authService.validateUser(dto.email, dto.password);
+
+  //   return this.authService.login((dto as any).user); // or req.user if injected
+  // }
+
+  //   // @UseGuards(LocalAuthGuard)
 
   @Post('login')
   async login(@Body() dto: ValidateUserDto) {
@@ -26,44 +59,3 @@ export class AuthController {
     return this.authService.login(validated as any);
   }
 }
-
-// /* eslint-disable @typescript-eslint/no-unused-vars */
-// import { Controller, Post, Body, UseGuards, UnauthorizedException } from '@nestjs/common';
-// import { AuthService } from './auth.service';
-// import { LocalStrategy } from './strategies/local.strategy';
-// import { ValidateUserDto } from './dto/validate-user.dto';
-// import { CreateUserDto } from './dto/create-user.dto';
-// import { UsersService } from 'src/users/users.service';
-
-// @Controller('auth')
-// export class AuthController {
-//   constructor(
-//     private readonly authService: AuthService,
-//     private usersService: UsersService,
-//   ) {}
-
-//   // @UseGuards(LocalStrategy)
-//   @Post('login')
-//   async login(@Body() validateUserDto: ValidateUserDto) {
-//     const { email, password } = validateUserDto;
-
-//     const user = await this.authService.validateUser(email, password);
-//     if (!user) {
-//       throw new UnauthorizedException('Invalid credentials');
-//     }
-
-//     return this.authService.login(user);
-//   }
-
-//   @Post('signup')
-//   async signup(@Body() createUserDto: CreateUserDto) {
-//     const user = await this.usersService.createUser(createUserDto);
-
-//     const { password, ...result } = user;
-
-//     return {
-//       ...result,
-//       role: "admin", // ✅ return role name as string
-//     };
-//   }
-// }

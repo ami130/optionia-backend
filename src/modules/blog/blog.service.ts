@@ -6,16 +6,33 @@ import { Blog } from './entities/blog.entity';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 import { User } from 'src/users/entities/user.entity';
+import { Page } from '../pages/entities/page.entity';
+import { Category } from '../categories/entities/category.entity';
+import { slugify } from 'src/common/config/slugify';
 
 @Injectable()
 export class BlogService {
   constructor(
     @InjectRepository(Blog)
     private blogRepo: Repository<Blog>,
+    @InjectRepository(Page) private pageRepo: Repository<Page>,
+    @InjectRepository(Category) private categoryRepo: Repository<Category>,
   ) {}
 
   async create(data: CreateBlogDto, user: User) {
-    const blog = this.blogRepo.create({ ...data });
+    const page = await this.pageRepo.findOne({ where: { id: data.pageId } });
+    if (!page) throw new NotFoundException('Page not found');
+
+    const category = await this.categoryRepo.findOne({ where: { id: data.categoryId } });
+    if (!category) throw new NotFoundException('Category not found');
+
+    const slug = data.title
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    const blog = this.blogRepo.create({ ...data, page, category, slug });
     return this.blogRepo.save(blog);
   }
 
@@ -41,12 +58,64 @@ export class BlogService {
     if (!blog) throw new NotFoundException('Blog not found');
     return blog;
   }
+
+  async getBlogPage(): Promise<any> {
+    // fetch the "blog" page with its children if any
+    const page = await this.pageRepo.findOne({
+      where: { url: 'blog', isActive: true },
+      relations: ['children', 'blogs', 'blogs.category'], // include category for mapping
+    });
+
+    if (!page) throw new NotFoundException('Blog page not found');
+
+    // map blogs to desired format
+    const blogs = (page?.blogs ?? []).map((b) => ({
+      id: b.id,
+      title: b.title,
+      slug: b.slug,
+      subtitle: b.subtitle,
+      author: { name: b.authorName },
+      category: b.category?.name,
+      tags: b.metaData?.tags || [],
+      status: b.status,
+      featured: b.featured,
+      readingTime: b.readingTime,
+      metaData: b.metaData,
+      content: {
+        thumbnail: { url: b.thumbnailUrl },
+        description: b.subtitle,
+        body: b.content,
+        summary: b.metaData?.summary,
+        tableOfContents: b.metaData?.tableOfContents || [],
+      },
+      dates: {
+        publishedAt: b.createdAt,
+        updatedAt: b.updatedAt,
+        scheduledFor: b.metaData?.scheduledFor || null,
+      },
+      relatedPosts: b.metaData?.relatedPosts || [],
+      schemaMarkup: b.metaData?.schemaMarkup || {},
+    }));
+
+    return {
+      data: {
+        name: page.name,
+        title: page.title,
+        subtitle: page.subtitle,
+        description: page.description,
+        backgroundImage: page.backgroundImage,
+        backgroundColor: page.backgroundColor,
+        textColor: page.textColor,
+        metadata: page.type,
+        metaDescription: page.metaDescription,
+        metaKeywords: page.metaKeywords,
+        canonicalUrl: page.canonicalUrl,
+        metaImage: page.metaImage,
+      },
+      blogs,
+    };
+  }
 }
-
-
-
-
-
 
 // import { CreateBlogDto } from './dto/create-blog.dto';
 // import {

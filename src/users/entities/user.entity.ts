@@ -31,9 +31,18 @@ export class User {
   @Column()
   password: string;
 
-  @ManyToOne(() => Role, { eager: true }) // ← make eager if you always want role
+  @Column({ nullable: true })
+  profileImage?: string;
+
+  @ManyToOne(() => Role, { eager: true })
   @JoinColumn({ name: 'role_id' })
   role: Role;
+
+  @Column({ nullable: true, length: 120 })
+  bio?: string;
+
+  @Column({ nullable: true })
+  linkedinProfile?: string;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -44,32 +53,40 @@ export class User {
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword() {
-    if (this.password) {
+    // Only hash if password is modified and not already hashed
+    if (this.password && !this.password.startsWith('$2b$')) {
       const saltRounds = 10;
       this.password = await bcrypt.hash(this.password, saltRounds);
     }
   }
 
-  async comparePassword(attempt: string) {
-    return bcrypt.compare(attempt, this.password);
+  async comparePassword(attempt: string): Promise<boolean> {
+    if (!attempt || !this.password) {
+      return false;
+    }
+
+    try {
+      return await bcrypt.compare(attempt, this.password);
+    } catch (error) {
+      console.error('Password comparison error:', error);
+      return false;
+    }
   }
 }
 
 // import {
-//   BeforeUpdate,
-//   BeforeInsert,
-//   Column,
 //   Entity,
 //   PrimaryGeneratedColumn,
-//   Unique,
-//   OneToMany,
+//   Column,
+//   BeforeInsert,
+//   BeforeUpdate,
+//   ManyToOne,
 //   CreateDateColumn,
 //   UpdateDateColumn,
-//   ManyToOne,
+//   Unique,
 //   JoinColumn,
 // } from 'typeorm';
 // import * as bcrypt from 'bcrypt';
-// import { Blog } from 'src/modules/blog/entities/blog.entity';
 // import { Exclude } from 'class-transformer';
 // import { Role } from 'src/roles/entities/role.entity/role.entity';
 
@@ -90,29 +107,40 @@ export class User {
 //   @Column()
 //   password: string;
 
+//   @Column({ nullable: true })
+//   profileImage?: string;
+
+//   @ManyToOne(() => Role, { eager: true })
+//   @JoinColumn({ name: 'role_id' })
+//   role: Role;
+
+//   @Column({ nullable: true, length: 120 })
+//   bio?: string;
+
+//   @Column({ nullable: true })
+//   linkedinProfile?: string;
+
 //   @CreateDateColumn()
 //   createdAt: Date;
 
 //   @UpdateDateColumn()
 //   updatedAt: Date;
 
-//   // ✅ This now handles the user's role
-//   // @ManyToOne(() => Role, (role) => role.users, { eager: true })
-//   // @JoinColumn({ name: 'roleId' })
-//   role: Role;
-
-//   @OneToMany(() => Blog, (blog) => blog.author)
-//   blogs: Blog[];
-
 //   @BeforeInsert()
 //   @BeforeUpdate()
 //   async hashPassword() {
 //     if (this.password) {
-//       this.password = await bcrypt.hash(this.password, 10);
+//       const saltRounds = 10;
+//       this.password = await bcrypt.hash(this.password, saltRounds);
 //     }
 //   }
 
-//   async comparePassword(attempt: string): Promise<boolean> {
-//     return await bcrypt.compare(attempt, this.password);
+//   async comparePassword(attempt: string) {
+//     if (!this.password) return false; // Prevent crash if no password saved
+//     return bcrypt.compare(attempt, this.password);
 //   }
+
+//   // async comparePassword(attempt: string) {
+//   //   return bcrypt.compare(attempt, this.password);
+//   // }
 // }

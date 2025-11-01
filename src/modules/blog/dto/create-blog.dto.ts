@@ -1,26 +1,59 @@
-import { IsNotEmpty, IsString, IsOptional, MaxLength } from 'class-validator';
+// src/modules/blog/dto/create-blog.dto.ts
+import { Type } from 'class-transformer';
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator';
 
 export class CreateBlogDto {
-  @IsString()
   @IsNotEmpty()
-  @MaxLength(255)
-  // @IsUnique(Blog, 'title', { message: 'Title must be unique' })
+  @IsString()
   title: string;
 
-  @IsString()
   @IsNotEmpty()
-  @MaxLength(2000)
-  description: string;
-
   @IsString()
-  @IsOptional()
-  status?: string;
+  slug: string;
 
+  @IsNotEmpty()
   @IsString()
-  @IsOptional()
-  content?: string;
+  content: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
+  subtitle?: string;
+
+  @IsOptional()
+  @IsString()
+  thumbnailUrl?: string;
+
+  @IsOptional()
+  @IsString()
   image?: string;
+
+  @IsOptional()
+  metaData?: any;
+
+  @IsOptional()
+  @IsString()
+  authorName?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string; // published, draft
+
+  @IsOptional()
+  @IsBoolean()
+  featured?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  readingTime?: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
+  pageId: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
+  categoryId: number;
 }

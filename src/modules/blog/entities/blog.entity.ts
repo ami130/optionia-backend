@@ -1,9 +1,9 @@
 // src/modules/blog/entities/blog.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Page } from 'src/modules/pages/entities/page.entity';
 import { Category } from 'src/modules/categories/entities/category.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Unique } from 'typeorm';
 
 @Entity('blogs')
-@Unique(['title'])
 export class Blog {
   @PrimaryGeneratedColumn()
   id: number;
@@ -11,17 +11,41 @@ export class Blog {
   @Column()
   title: string;
 
-  @Column('text')
-  content: string;
+  @Column()
+  slug: string;
+
+  @Column({ type: 'text' })
+  subtitle: string;
+
+  @Column({ type: 'text' })
+  content: string; // main body HTML
+
+  @Column({ nullable: true })
+  thumbnailUrl?: string;
 
   @Column({ nullable: true })
   image?: string;
 
-  // @ManyToOne(() => User, (user) => user.blogs, { eager: true })
-  // author: User;
+  @Column({ type: 'json', nullable: true })
+  metaData?: any;
 
-  @ManyToOne(()=>Category, (category)=> category.blogs, {eager:true})
-  category:Category
+  @Column({ nullable: true })
+  authorName?: string;
+
+  @Column({ nullable: true })
+  status?: string; // published, draft
+
+  @Column({ default: false })
+  featured?: boolean;
+
+  @Column({ type: 'int', nullable: true })
+  readingTime?: number;
+
+  @ManyToOne(() => Page, (page) => page.blogs, { eager: true })
+  page: Page;
+
+  @ManyToOne(() => Category, (category) => category.blogs, { eager: true })
+  category: Category;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -10,7 +10,7 @@ export class RolesGuard implements CanActivate {
     const required = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [ctx.getHandler(), ctx.getClass()]);
     if (!required || required.length === 0) return true;
     const req = ctx.switchToHttp().getRequest();
-    const userRole = req.user?.role;
+    const userRole = req.user?.role?.slug;
     if (!userRole) return false;
     return required.includes(userRole);
   }

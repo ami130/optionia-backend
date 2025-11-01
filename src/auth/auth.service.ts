@@ -10,14 +10,40 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string) {
+  async validateUser(email: string, password: string): Promise<any> {
+    console.log('🔍 AuthService - Validating:', email);
+
     const user = await this.usersService.findByEmail(email);
-    if (user && (await user.comparePassword(password))) {
-      const { password: _p, ...rest } = user as Partial<User>;
-      return rest;
+    if (!user) {
+      console.log('❌ User not found');
+      return null;
     }
-    return null;
+
+    console.log('🔍 User found:', user.email);
+    console.log('🔍 Stored password length:', user.password?.length);
+
+    try {
+      const isMatch = await user.comparePassword(password);
+      console.log('🔍 Password match:', isMatch);
+
+      if (isMatch) {
+        const { password, ...result } = user;
+        return result;
+      }
+      return null;
+    } catch (error) {
+      console.error('❌ Auth validation error:', error);
+      return null;
+    }
   }
+  // async validateUser(email: string, password: string) {
+  //   const user = await this.usersService.findByEmail(email);
+  //   if (user && (await user.comparePassword(password))) {
+  //     const { password: _p, ...rest } = user as Partial<User>;
+  //     return rest;
+  //   }
+  //   return null;
+  // }
 
   async login(user: Partial<User>) {
     const payload = { username: user.username, sub: user.id, role: user.role?.slug ?? null };

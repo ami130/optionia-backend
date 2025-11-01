@@ -37,23 +37,47 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
+  // In main.ts - update your validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
       whitelist: true,
-      forbidNonWhitelisted: true,
-      transformOptions: { enableImplicitConversion: true },
+      forbidNonWhitelisted: true, // Keep this true for security
+      transformOptions: {
+        enableImplicitConversion: true,
+        excludeExtraneousValues: false, // Allow extra values but filter them
+      },
       exceptionFactory: (errors) => {
         const messages = errors.map((err) => {
           const constraints = err.constraints
             ? Object.values(err.constraints).join(', ')
-            : 'validation error';
+            : `property ${err.property} should not exist`;
           return `${err.property} - ${constraints}`;
         });
+
+        // Log validation errors for debugging
+        console.log('🔍 Validation Errors:', messages);
         return new BadRequestException(messages);
       },
     }),
   );
+
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     transform: true,
+  //     whitelist: true,
+  //     skipMissingProperties: false, // keep optional fields
+  //     forbidNonWhitelisted: true,
+  //     transformOptions: { enableImplicitConversion: true },
+  //     exceptionFactory: (errors) => {
+  //       const messages = errors.map((err) => {
+  //         const constraints = err.constraints ? Object.values(err.constraints).join(', ') : 'validation error';
+  //         return `${err.property} - ${constraints}`;
+  //       });
+  //       return new BadRequestException(messages);
+  //     },
+  //   }),
+  // );
 
   // ✅ Auto-seed Admin User (safe)
 

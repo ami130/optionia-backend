@@ -3,6 +3,7 @@ export const ModulesForRole = [
   { name: 'Category', slug: 'category' },
   { name: 'Tag', slug: 'tag' },
   { name: 'Module', slug: 'module' },
+  // { name: 'Page', slug: 'page' },
   { name: 'Permission', slug: 'permission' },
-  { name: 'User Management', slug: 'users' },
+  { name: 'Users', slug: 'users' },
 ];

@@ -18,7 +18,7 @@ export class ModuleMiddleware implements NestMiddleware {
     contacts: 'contact',
     reviews: 'review',
     carts: 'cart',
-    pages: 'page',
+    page: 'page',
     website: 'website',
     uploads: 'upload',
     sections: 'section',
@@ -27,11 +27,14 @@ export class ModuleMiddleware implements NestMiddleware {
   };
 
   use(req: Request, res: Response, next: NextFunction) {
+    // Skip middleware for login/signup routes
+    if (req.path.startsWith('/auth/login') || req.path.startsWith('/auth/signup')) {
+      return next();
+    }
+
     const pathSegments = req.originalUrl.split('/').filter((segment) => segment);
 
-    // Find the first segment that matches a module
     let moduleSlug: string | undefined;
-
     for (const segment of pathSegments) {
       if (this.routeModuleMap[segment]) {
         moduleSlug = this.routeModuleMap[segment];
@@ -39,14 +42,36 @@ export class ModuleMiddleware implements NestMiddleware {
       }
     }
 
-    // If no match found, use the first path segment as module name
     if (!moduleSlug && pathSegments.length > 0) {
       moduleSlug = pathSegments[0].toLowerCase();
     }
 
     (req as any).routeModule = moduleSlug || 'default';
-
     console.log(`🏷️ Dynamic Middleware: Module set to "${(req as any).routeModule}" for ${req.method} ${req.url}`);
     next();
   }
+
+  // use(req: Request, res: Response, next: NextFunction) {
+  //   const pathSegments = req.originalUrl.split('/').filter((segment) => segment);
+
+  //   // Find the first segment that matches a module
+  //   let moduleSlug: string | undefined;
+
+  //   for (const segment of pathSegments) {
+  //     if (this.routeModuleMap[segment]) {
+  //       moduleSlug = this.routeModuleMap[segment];
+  //       break;
+  //     }
+  //   }
+
+  //   // If no match found, use the first path segment as module name
+  //   if (!moduleSlug && pathSegments.length > 0) {
+  //     moduleSlug = pathSegments[0].toLowerCase();
+  //   }
+
+  //   (req as any).routeModule = moduleSlug || 'default';
+
+  //   console.log(`🏷️ Dynamic Middleware: Module set to "${(req as any).routeModule}" for ${req.method} ${req.url}`);
+  //   next();
+  // }
 }

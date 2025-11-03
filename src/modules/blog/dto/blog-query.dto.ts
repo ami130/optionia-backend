@@ -1,15 +1,23 @@
-import { IsOptional, IsNumber, IsString, IsIn } from 'class-validator';
-import { Transform } from 'class-transformer';
+// src/modules/blog/dto/blog-query.dto.ts
+import { IsOptional, IsNumber, Min, IsString, IsArray, IsEnum, IsBoolean } from 'class-validator';
+import { Type } from 'class-transformer';
 
-export class commonQueryDto {
+export enum SortOrder {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
+
+export class BlogFilterDto {
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
-  @Transform(({ value }) => parseInt(value, 10))
+  @Min(1)
   page?: number = 1;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
-  @Transform(({ value }) => parseInt(value, 10))
+  @Min(1)
   limit?: number = 10;
 
   @IsOptional()
@@ -18,17 +26,35 @@ export class commonQueryDto {
 
   @IsOptional()
   @IsString()
-  authorId?: string;
-
-  @IsOptional()
-  @IsString()
-  @IsIn(['ASC', 'DESC'])
-  order?: 'ASC' | 'DESC' = 'DESC';
-
-  @IsOptional()
-  @IsString()
-  @IsIn(['title', 'createdAt', 'updatedAt'])
   sortBy?: string = 'createdAt';
 
-  // Add more filter fields as needed
+  @IsOptional()
+  @IsEnum(SortOrder)
+  sortOrder?: SortOrder = SortOrder.DESC;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  category?: number;
+
+  @IsOptional()
+  @IsString()
+  tagIds?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  author?: number;
+
+  @IsOptional()
+  @IsString()
+  blogType?: string;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  featured?: boolean;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

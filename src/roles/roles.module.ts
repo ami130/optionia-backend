@@ -2,7 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RolesService } from './roles.service';
 import { RolesController } from './roles.controller';
-import { Role } from './entities/role.entity/role.entity';
+import { Role } from './entities/role.entity';
 import { RoleModulePermission } from './entities/role-module-permission/role-module-permission.entity';
 import { ModuleEntity } from './entities/module/module.entity';
 import { Permission } from './entities/permission.entity/permission.entity';
@@ -18,7 +18,6 @@ import { UsersModule } from 'src/users/users.module';
   exports: [RolesService],
 })
 export class RolesModule {}
-
 
 // import { Module } from '@nestjs/common';
 // import { TypeOrmModule } from '@nestjs/typeorm';

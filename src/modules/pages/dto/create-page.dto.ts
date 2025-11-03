@@ -20,6 +20,9 @@ export class CreatePageDto {
   @IsString() name: string;
   @IsString() title: string;
   @IsString() url: string;
+  @IsOptional()
+  @IsString()
+  slug?: string;
   @IsOptional() @IsString() subtitle?: string;
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsBoolean() navbarShow?: boolean;

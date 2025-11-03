@@ -1,15 +1,27 @@
-// src/modules/blog/dto/create-blog.dto.ts
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsArray,
+  IsBoolean,
+  IsEnum,
+} from 'class-validator';
+import { BlogType } from '../enum/blog-type.enum';
 
 export class CreateBlogDto {
   @IsNotEmpty()
   @IsString()
   title: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  slug: string;
+  slug?: string;
+
+  @IsOptional()
+  @IsString()
+  subtitle?: string;
 
   @IsNotEmpty()
   @IsString()
@@ -17,35 +29,36 @@ export class CreateBlogDto {
 
   @IsOptional()
   @IsString()
-  subtitle?: string;
-
-  @IsOptional()
-  @IsString()
   thumbnailUrl?: string;
 
   @IsOptional()
-  @IsString()
-  image?: string;
+  @IsArray()
+  image?: string[];
 
   @IsOptional()
-  metaData?: any;
+  @IsNumber()
+  @Type(() => Number)
+  readingTime?: number;
 
   @IsOptional()
-  @IsString()
-  authorName?: string;
-
-  @IsOptional()
-  @IsString()
-  status?: string; // published, draft
+  @IsNumber()
+  @Type(() => Number)
+  wordCount?: number;
 
   @IsOptional()
   @IsBoolean()
   featured?: boolean;
 
   @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  readingTime?: number;
+  @IsEnum(BlogType)
+  blogType?: BlogType;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  metaData?: any;
 
   @IsNotEmpty()
   @IsNumber()
@@ -56,4 +69,12 @@ export class CreateBlogDto {
   @IsNumber()
   @Type(() => Number)
   categoryId: number;
+
+  @IsOptional()
+  @IsArray()
+  authorIds?: number[];
+
+  @IsOptional()
+  @IsArray()
+  tagIds?: number[];
 }

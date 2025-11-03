@@ -1,4 +1,3 @@
-// // src/modules/pages/entities/page.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -10,9 +9,11 @@ import {
   Index,
   CreateDateColumn,
   UpdateDateColumn,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
-import { Blog } from '../../blog/entities/blog.entity'; // example module
-// import { Product } from '../../products/entities/product.entity'; // future module
+import { Blog } from '../../blog/entities/blog.entity';
+import { slugify } from 'src/common/config/slugify'; // Make sure you have slugify
 
 @Entity('pages')
 @Unique(['title'])
@@ -21,18 +22,21 @@ export class Page {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: false, default: 'general' }) // safe for new rows, old rows updated manually
+  @Column({ nullable: false, default: 'general' })
   @Index()
   name: string;
-  // e.g., 'blog', 'product'
+
+  @Column({ unique: true, nullable: false })
+  @Index()
+  slug: string;
 
   @Column()
   @Index()
-  title: string; // Display title
+  title: string;
 
   @Column()
   @Index()
-  url: string; // slug
+  url: string;
 
   @Column({ type: 'text', nullable: true })
   subtitle?: string;
@@ -50,13 +54,11 @@ export class Page {
   isActive: boolean;
 
   @Column({ default: 'general' })
-  type: string; // blog, product, service
+  type: string;
 
-  // Optional content
   @Column({ type: 'text', nullable: true })
   content?: string;
 
-  // SEO metadata
   @Column({ nullable: true })
   metaTitle?: string;
 
@@ -72,7 +74,6 @@ export class Page {
   @Column({ type: 'json', nullable: true })
   metaImage?: { url: string; alt?: string };
 
-  // Styling
   @Column({ nullable: true })
   backgroundImage?: string;
 
@@ -82,7 +83,6 @@ export class Page {
   @Column({ nullable: true })
   textColor?: string;
 
-  // Self-referencing for nested pages
   @ManyToOne(() => Page, (page) => page.children, {
     nullable: true,
     onDelete: 'CASCADE',
@@ -99,7 +99,6 @@ export class Page {
   })
   children?: Page[];
 
-  // Example module relation
   @OneToMany(() => Blog, (blog) => blog.page, { cascade: true })
   blogs?: Blog[];
 
@@ -108,63 +107,21 @@ export class Page {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  generateSlug() {
+    // If slug is not provided or empty, generate from title
+    if (!this.slug || this.slug.trim() === '') {
+      this.slug = slugify(this.title);
+    } else {
+      // If slug is provided, ensure it's properly slugified
+      this.slug = slugify(this.slug);
+    }
+
+    // Ensure slug is not empty (fallback)
+    if (!this.slug || this.slug.trim() === '') {
+      this.slug = slugify(this.name || 'page');
+    }
+  }
 }
-
-// import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, Unique, Index } from 'typeorm';
-
-// @Entity('pages')
-// @Unique(['title']) // Only title needs to be unique globally
-// @Unique(['parentId', 'url']) // URL should be unique per parent
-// export class Page {
-//   @PrimaryGeneratedColumn()
-//   id: number;
-
-//   @Column()
-//   @Index()
-//   title: string;
-
-//   @Column()
-//   @Index()
-//   url: string;
-
-//   @Column({ type: 'text', nullable: true })
-//   content?: string;
-
-//   @Column({ default: 'general' })
-//   type: string;
-
-//   @Column({ default: 0 })
-//   order: number;
-
-//   @Column({ default: true })
-//   isActive: boolean;
-
-//   @Column({ nullable: true })
-//   metaTitle?: string;
-
-//   @Column({ type: 'text', nullable: true })
-//   metaDescription?: string;
-
-//   // Self-referencing relationship
-//   @ManyToOne(() => Page, (page) => page.children, {
-//     nullable: true,
-//     onDelete: 'CASCADE',
-//   })
-//   @JoinColumn({ name: 'parentId' })
-//   parent?: Page;
-
-//   @Column({ nullable: true })
-//   parentId?: number;
-
-//   @OneToMany(() => Page, (page) => page.parent, {
-//     cascade: true,
-//     onDelete: 'CASCADE',
-//   })
-//   children?: Page[];
-
-//   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-//   createdAt: Date;
-
-//   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-//   updatedAt: Date;
-// }

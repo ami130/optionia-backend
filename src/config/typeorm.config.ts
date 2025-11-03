@@ -24,6 +24,8 @@ export const typeOrmConfig: TypeOrmModuleAsyncOptions = {
             rejectUnauthorized: false,
           }
         : false, // 🔥 Disable SSL for localhost
+      migrations: ['src/migrations/*.ts'],
+      migrationsTableName: 'migrations',
     };
   },
 };

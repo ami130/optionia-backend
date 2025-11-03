@@ -28,21 +28,36 @@ export class UploadsService {
     data: Record<string, any>,
     allowedFields: string[] = [],
     existingData?: any,
+    options?: { arrayIndex?: Record<string, number> }, // optional map of fieldname -> index for array replacement
   ) {
     if (!files || files.length === 0) return;
 
     files.forEach((file) => {
       if (allowedFields.length === 0 || allowedFields.includes(file.fieldname)) {
-        // Delete old file if exists
-        if (existingData && existingData[file.fieldname]) {
-          const fullPath = '.' + existingData[file.fieldname];
-          if (fs.existsSync(fullPath)) {
-            fs.unlinkSync(fullPath);
-          }
-        }
+        // Handle single vs array replacement
+        if (Array.isArray(existingData?.[file.fieldname])) {
+          const index = options?.arrayIndex?.[file.fieldname];
+          const arr = [...existingData[file.fieldname]];
 
-        // Assign new path
-        data[file.fieldname] = `/public/uploads/${file.filename}`;
+          // Delete old file at that index if exists
+          if (typeof index === 'number' && arr[index]) {
+            const fullPath = '.' + arr[index];
+            if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+            arr[index] = `/public/uploads/${file.filename}`;
+          } else {
+            // append if no index provided
+            arr.push(`/public/uploads/${file.filename}`);
+          }
+
+          data[file.fieldname] = arr.slice(0, 5); // enforce max 5
+        } else {
+          // single field replacement
+          if (existingData && existingData[file.fieldname]) {
+            const fullPath = '.' + existingData[file.fieldname];
+            if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+          }
+          data[file.fieldname] = `/public/uploads/${file.filename}`;
+        }
       }
     });
   }

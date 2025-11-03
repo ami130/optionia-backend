@@ -2,7 +2,6 @@ import { createContactDto } from './dto/Create-contact.dto';
 import { ContactService } from './contact.service';
 import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { Contact } from './entities/contact.entity';
-import { commonQueryDto } from '../blog/dto/blog-query.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -20,7 +19,7 @@ export class ContactController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  async getAllContact(@Query() query: commonQueryDto): Promise<{ data: Contact[]; count: number }> {
+  async getAllContact(@Query() query: any): Promise<{ data: Contact[]; count: number }> {
     return this.contactService.getAllContact(query);
   }
 

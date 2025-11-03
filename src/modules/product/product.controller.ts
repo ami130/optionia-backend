@@ -25,7 +25,6 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enum/userRole.enum';
 import { AuthenticatedRequest } from 'src/types/express-request.interface';
 import { ProductService } from './product.service';
-import { commonQueryDto } from '../blog/dto/blog-query.dto';
 import { Product } from './entities/products.entity';
 
 import { Express } from 'express';
@@ -76,7 +75,7 @@ export class ProductController {
   }
 
   @Get()
-  async getAllProducts(@Query() query: commonQueryDto): Promise<{ data: Product[]; count: number }> {
+  async getAllProducts(@Query() query: any): Promise<{ data: Product[]; count: number }> {
     return this.productService.getAllProducts(query);
   }
 

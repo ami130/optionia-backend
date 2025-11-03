@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
-import { Role } from 'src/roles/entities/role.entity/role.entity';
+import { Role } from 'src/roles/entities/role.entity';
 import { RolesService } from 'src/roles/roles.service';
 
 import * as fs from 'fs';
@@ -61,8 +61,6 @@ export class UsersService {
       select: ['id', 'name', 'slug'], // Make sure to select slug
     });
   }
-
-
 
   async findById(id: number, relations: string[] = []) {
     const user = await this.userRepo.findOne({ where: { id }, relations: ['role'] });

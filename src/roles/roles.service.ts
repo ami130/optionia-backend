@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { AssignRolePermissionDto } from './dto/assign-role-permission.dto';
-import { Role } from './entities/role.entity/role.entity';
+import { Role } from './entities/role.entity';
 import { ModuleEntity } from './entities/module/module.entity';
 import { Permission } from './entities/permission.entity/permission.entity';
 import { RoleModulePermission } from './entities/role-module-permission/role-module-permission.entity';

@@ -1,14 +1,7 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
-  Unique,
-} from 'typeorm';
-import { Role } from '../role.entity/role.entity';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Unique } from 'typeorm';
+import { Role } from '../role.entity';
 import { ModuleEntity } from '../module/module.entity';
 import { Permission } from '../permission.entity/permission.entity';
-
 
 @Entity('role_module_permissions')
 @Unique(['role', 'module', 'permission'])

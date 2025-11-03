@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Contact } from './entities/contact.entity';
 import { Like, Repository } from 'typeorm';
 import { createContactDto } from './dto/Create-contact.dto';
-import { commonQueryDto } from '../blog/dto/blog-query.dto';
 
 @Injectable()
 export class ContactService {
@@ -17,7 +16,7 @@ export class ContactService {
     return this.contactRepository.save(result);
   }
 
-  async getAllContact(query: commonQueryDto): Promise<{ data: Contact[]; count: number }> {
+  async getAllContact(query: any): Promise<{ data: Contact[]; count: number }> {
     const { page = 1, limit = 10, search = '', order = 'DESC', sortBy = 'createdAt' } = query;
     const skip = (page - 1) * limit;
 

@@ -12,7 +12,7 @@ import {
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
-import { Role } from 'src/roles/entities/role.entity/role.entity';
+import { Role } from 'src/roles/entities/role.entity';
 
 @Entity('users')
 @Unique(['email'])

@@ -10,8 +10,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
-import { Permission } from '../permission.entity/permission.entity';
-import { RoleModulePermission } from '../role-module-permission/role-module-permission.entity';
+import { Permission } from './permission.entity/permission.entity';
+import { RoleModulePermission } from './role-module-permission/role-module-permission.entity';
 
 @Entity('roles')
 export class Role {
@@ -40,9 +40,6 @@ export class Role {
   updatedAt: Date;
 }
 
-
-
-
 // import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 // @Entity('roles')
@@ -56,9 +53,6 @@ export class Role {
 //   @Column({ unique: true })
 //   slug: string;
 // }
-
-
-
 
 // import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 // import { User } from 'src/users/entities/user.entity';

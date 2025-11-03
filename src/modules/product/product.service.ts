@@ -10,7 +10,6 @@ import { CloudinaryService } from 'src/common/services/cloudinary.service';
 import { CreateProductDto } from './Dto/product.dto';
 import { User } from 'src/users/entities/user.entity';
 import { Tag } from '../tag/entities/tag.entity';
-import { commonQueryDto } from '../blog/dto/blog-query.dto';
 
 import { Express } from 'express';
 import 'multer'; // This import extends the Express namespace with Multer types
@@ -107,7 +106,7 @@ export class ProductService {
     }
   }
 
-  async getAllProducts(query: commonQueryDto): Promise<{ data: Product[]; count: number }> {
+  async getAllProducts(query: any): Promise<{ data: Product[]; count: number }> {
     const { page = 1, limit = 10, search, authorId, order = 'DESC', sortBy = 'createdAt' } = query;
     const skip = (page - 1) * limit;
 

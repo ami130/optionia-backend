@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
 import { ModuleEntity } from 'src/roles/entities/module/module.entity';
 import { Permission } from 'src/roles/entities/permission.entity/permission.entity';
-import { Role } from 'src/roles/entities/role.entity/role.entity';
+import { Role } from 'src/roles/entities/role.entity';
 import { RoleModulePermission } from 'src/roles/entities/role-module-permission/role-module-permission.entity';
 import { ModulesService } from 'src/roles/modules/modules.service'; // Import ModulesService
 
@@ -64,18 +64,18 @@ export class SeederService {
     for (const module of allModules) {
       for (const permission of allPermissions) {
         const exists = await this.rmpRepo.findOne({
-          where: { 
-            role: { id: adminRole.id }, 
-            module: { id: module.id }, 
-            permission: { id: permission.id } 
+          where: {
+            role: { id: adminRole.id },
+            module: { id: module.id },
+            permission: { id: permission.id },
           },
         });
-        
+
         if (!exists) {
-          const rmp = this.rmpRepo.create({ 
-            role: adminRole, 
-            module: module, 
-            permission: permission 
+          const rmp = this.rmpRepo.create({
+            role: adminRole,
+            module: module,
+            permission: permission,
           });
           await this.rmpRepo.save(rmp);
         }

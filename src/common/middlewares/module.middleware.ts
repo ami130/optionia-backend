@@ -1,17 +1,14 @@
-// src/common/middlewares/module.middleware.ts
 import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
 
 @Injectable()
 export class ModuleMiddleware implements NestMiddleware {
-  // Dynamic route to module mapping
   private readonly routeModuleMap: { [key: string]: string } = {
     categories: 'category',
     blog: 'blog',
     products: 'product',
     users: 'users',
-    modules: 'module', // Add this mapping
-    roles: 'role', // Uncomment this
+    modules: 'module',
+    roles: 'role',
     services: 'services',
     pricing: 'pricing',
     tags: 'tag',
@@ -22,11 +19,11 @@ export class ModuleMiddleware implements NestMiddleware {
     website: 'website',
     uploads: 'upload',
     sections: 'section',
-    permissions: 'permission', // Uncomment this
+    permissions: 'permission',
     'terms-conditions': 'terms-conditions',
   };
 
-  use(req: Request, res: Response, next: NextFunction) {
+  use(req: any, res: any, next: () => void) {
     // Skip middleware for login/signup routes
     if (req.path.startsWith('/auth/login') || req.path.startsWith('/auth/signup')) {
       return next();
@@ -46,32 +43,8 @@ export class ModuleMiddleware implements NestMiddleware {
       moduleSlug = pathSegments[0].toLowerCase();
     }
 
-    (req as any).routeModule = moduleSlug || 'default';
-    console.log(`🏷️ Dynamic Middleware: Module set to "${(req as any).routeModule}" for ${req.method} ${req.url}`);
+    req.routeModule = moduleSlug || 'default';
+    console.log(`🏷️ Dynamic Middleware: Module set to "${req.routeModule}" for ${req.method} ${req.url}`);
     next();
   }
-
-  // use(req: Request, res: Response, next: NextFunction) {
-  //   const pathSegments = req.originalUrl.split('/').filter((segment) => segment);
-
-  //   // Find the first segment that matches a module
-  //   let moduleSlug: string | undefined;
-
-  //   for (const segment of pathSegments) {
-  //     if (this.routeModuleMap[segment]) {
-  //       moduleSlug = this.routeModuleMap[segment];
-  //       break;
-  //     }
-  //   }
-
-  //   // If no match found, use the first path segment as module name
-  //   if (!moduleSlug && pathSegments.length > 0) {
-  //     moduleSlug = pathSegments[0].toLowerCase();
-  //   }
-
-  //   (req as any).routeModule = moduleSlug || 'default';
-
-  //   console.log(`🏷️ Dynamic Middleware: Module set to "${(req as any).routeModule}" for ${req.method} ${req.url}`);
-  //   next();
-  // }
 }

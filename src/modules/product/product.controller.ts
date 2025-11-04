@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import type { Request } from 'express';
 import {
   BadRequestException,
   Body,
@@ -26,9 +25,8 @@ import { UserRole } from 'src/users/enum/userRole.enum';
 import { AuthenticatedRequest } from 'src/types/express-request.interface';
 import { ProductService } from './product.service';
 import { Product } from './entities/products.entity';
-
-import { Express } from 'express';
-import 'multer'; // This import extends the Express namespace with Multer types
+// import express from 'express';
+// This import extends the Express namespace with Multer types
 
 @Controller('product')
 export class ProductController {

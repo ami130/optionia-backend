@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/prefer-promise-reject-errors */
 import { Injectable } from '@nestjs/common';
 import { v2 as cloudinary, UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
-import { Express } from 'express';
+import  Express  from 'express';
 import 'multer'; // This import extends the Express namespace with Multer types
 
 @Injectable()

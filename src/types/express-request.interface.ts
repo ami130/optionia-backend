@@ -1,7 +1,4 @@
-// types/express-request.interface.ts
-import { Request } from 'express';
-
-export interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Express.Request {
   user: {
     userId: number;
     username: string;

@@ -11,8 +11,8 @@ import { CreateProductDto } from './Dto/product.dto';
 import { User } from 'src/users/entities/user.entity';
 import { Tag } from '../tag/entities/tag.entity';
 
-import { Express } from 'express';
-import 'multer'; // This import extends the Express namespace with Multer types
+// import { Express } from 'express';
+// import 'multer'; // This import extends the Express namespace with Multer types
 import { slugify } from 'src/common/config/slugify';
 
 @Injectable()

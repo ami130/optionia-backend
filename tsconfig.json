@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node", "multer", "express"],
+    "skipLibCheck": true,
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,
@@ -11,7 +14,6 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
-    "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
@@ -19,9 +21,7 @@
     "noFallthroughCasesInSwitch": false,
 
     "moduleResolution": "node",
-    "esModuleInterop": true, 
- "types": ["node"],
-    "typeRoots": ["./node_modules/@types"],
-      
-  }
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*", "src/types/**/*"]
 }

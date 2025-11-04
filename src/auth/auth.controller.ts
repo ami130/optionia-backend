@@ -5,7 +5,6 @@ import {
   UnauthorizedException,
   UseInterceptors,
   UploadedFile,
-  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from 'src/users/users.service';
@@ -14,7 +13,6 @@ import { ValidateUserDto } from './dto/validate-user.dto';
 import { Roles } from './decorators/roles.decorator';
 import { UploadsService } from 'src/modules/uploads/uploads.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { LocalAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -33,7 +31,6 @@ export class AuthController {
     }),
   )
   async signup(@Body() dto: CreateUserDto, @UploadedFile() file?: Express.Multer.File) {
-    console.log('first', dto);
     const user = await this.usersService.create(dto, file);
     // const { password, ...rest } = user as any;
     // const token = await this.authService.login(rest);

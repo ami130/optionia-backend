@@ -1,14 +1,15 @@
+// src/modules/uploads/uploads.service.ts
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { diskStorage } from 'multer';
 import { extname } from 'path';
 import * as fs from 'fs';
+import multer from 'multer';
 
 @Injectable()
 export class UploadsService {
   getFileStorage() {
-    return diskStorage({
+    return multer.diskStorage({
       destination: './public/uploads',
-      filename: (req, file, cb) => {
+      filename: (req, file: Express.Multer.File, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
         cb(null, `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`);
       },
@@ -28,11 +29,11 @@ export class UploadsService {
     data: Record<string, any>,
     allowedFields: string[] = [],
     existingData?: any,
-    options?: { arrayIndex?: Record<string, number> }, // optional map of fieldname -> index for array replacement
+    options?: { arrayIndex?: Record<string, number> },
   ) {
     if (!files || files.length === 0) return;
 
-    files.forEach((file) => {
+    files.forEach((file: Express.Multer.File) => {
       if (allowedFields.length === 0 || allowedFields.includes(file.fieldname)) {
         // Handle single vs array replacement
         if (Array.isArray(existingData?.[file.fieldname])) {

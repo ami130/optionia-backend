@@ -56,12 +56,26 @@ export class BlogController {
       limits: { files: 6 },
     }),
   )
-  async create(@Body() dto: CreateBlogDto, @UploadedFiles() files: Express.Multer.File[], @Req() req: any) {
+  async create(@UploadedFiles() files: Express.Multer.File[], @Body() dto: any, @Req() req: any) {
+    // ✅ Ensure required IDs
     if (!dto.pageId) throw new BadRequestException('pageId is required');
     if (!dto.categoryId) throw new BadRequestException('categoryId is required');
 
-    if (files?.length) this.handleFiles(files, dto);
-    return this.service.create(dto, req.user);
+    // ✅ Normalize authorIds and tagIds
+    if (dto.authorIds) {
+      dto.authorIds = typeof dto.authorIds === 'string' ? JSON.parse(dto.authorIds) : dto.authorIds;
+      if (!Array.isArray(dto.authorIds)) dto.authorIds = [dto.authorIds];
+      dto.authorIds = dto.authorIds.map((id: any) => +id);
+    }
+
+    if (dto.tagIds) {
+      dto.tagIds = typeof dto.tagIds === 'string' ? JSON.parse(dto.tagIds) : dto.tagIds;
+      if (!Array.isArray(dto.tagIds)) dto.tagIds = [dto.tagIds];
+      dto.tagIds = dto.tagIds.map((id: any) => +id);
+    }
+
+    // ✅ Pass files to service instead of handling in controller
+    return this.service.create(dto, req.user, files);
   }
 
   // ✅ UPDATE BLOG (Admin only)
@@ -76,16 +90,120 @@ export class BlogController {
   )
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateBlogDto,
+    @Body() dto: any, // Use any to handle mixed data
+    @Req() req: any,
     @UploadedFiles() files?: Express.Multer.File[],
-    @Body('imageIndexMap') imageIndexMap?: Record<string, number>,
   ) {
+    let updateData: UpdateBlogDto = {};
+    let imageIndexMap: Record<string, number> = {};
+
+    try {
+      // Parse the data field if it exists (from FormData)
+      if (dto.data && typeof dto.data === 'string') {
+        const parsedData = JSON.parse(dto.data);
+        updateData = { ...parsedData };
+
+        // Extract imageIndexMap from parsed data
+        if (parsedData.imageIndexMap) {
+          imageIndexMap = parsedData.imageIndexMap;
+          delete parsedData.imageIndexMap;
+        }
+      } else {
+        // Handle regular form data
+        updateData = { ...dto };
+
+        // Parse imageIndexMap if it exists
+        if (dto.imageIndexMap) {
+          if (typeof dto.imageIndexMap === 'string') {
+            imageIndexMap = JSON.parse(dto.imageIndexMap);
+          } else if (typeof dto.imageIndexMap === 'object') {
+            imageIndexMap = dto.imageIndexMap;
+          }
+          delete updateData.imageIndexMap;
+        }
+      }
+
+      // Ensure arrays are properly formatted
+      if (updateData.authorIds && !Array.isArray(updateData.authorIds)) {
+        updateData.authorIds = [updateData.authorIds];
+      }
+
+      if (updateData.tagIds && !Array.isArray(updateData.tagIds)) {
+        updateData.tagIds = [updateData.tagIds];
+      }
+    } catch (error) {
+      throw new BadRequestException('Invalid data format');
+    }
+
+    // Validate image files count
     const imageFiles = (files || []).filter((f) => f.fieldname === 'image');
     if (imageFiles.length > 5) {
       throw new BadRequestException('You can upload up to 5 images only.');
     }
-    return this.service.update(id, dto, files, imageIndexMap);
+
+    return this.service.update(id, updateData, files, imageIndexMap, req.user);
   }
+
+  // @Permissions('update')
+  // @Patch(':id')
+  // @UseInterceptors(
+  //   AnyFilesInterceptor({
+  //     storage: new UploadsService().getFileStorage(),
+  //     fileFilter: new UploadsService().fileFilter,
+  //     limits: { files: 6 },
+  //   }),
+  // )
+  // async update(
+  //   @Param('id', ParseIntPipe) id: number,
+  //   @Body() dto: UpdateBlogDto,
+  //   @Req() req: any,
+  //   @UploadedFiles() files?: Express.Multer.File[],
+  // ) {
+  //   // Parse imageIndexMap from the request body if provided
+  //   let imageIndexMap: Record<string, number> = {};
+
+  //   try {
+  //     if (dto.imageIndexMap && typeof dto.imageIndexMap === 'string') {
+  //       imageIndexMap = JSON.parse(dto.imageIndexMap);
+  //     } else if (typeof dto.imageIndexMap === 'object') {
+  //       imageIndexMap = dto.imageIndexMap;
+  //     }
+  //     // Remove imageIndexMap from dto as it's not part of the entity
+  //     delete dto.imageIndexMap;
+  //   } catch (error) {
+  //     throw new BadRequestException('Invalid imageIndexMap format');
+  //   }
+
+  //   // Validate image files count
+  //   const imageFiles = (files || []).filter((f) => f.fieldname === 'image');
+  //   if (imageFiles.length > 5) {
+  //     throw new BadRequestException('You can upload up to 5 images only.');
+  //   }
+
+  //   return this.service.update(id, dto, files, imageIndexMap, req.user);
+  // }
+
+  // @Permissions('update')
+  // @Patch(':id')
+  // @UseInterceptors(
+  //   AnyFilesInterceptor({
+  //     storage: new UploadsService().getFileStorage(),
+  //     fileFilter: new UploadsService().fileFilter,
+  //     limits: { files: 6 },
+  //   }),
+  // )
+  // async update(
+  //   @Param('id', ParseIntPipe) id: number,
+  //   @Body() dto: UpdateBlogDto,
+  //   @UploadedFiles() files?: Express.Multer.File[],
+  //   @Body('imageIndexMap') imageIndexMap?: Record<string, number>,
+  // ) {
+  //   const imageFiles = (files || []).filter((f) => f.fieldname === 'image');
+  //   if (imageFiles.length > 5) {
+  //     throw new BadRequestException('You can upload up to 5 images only.');
+  //   }
+  //   return this.service.update(id, dto, files, imageIndexMap);
+  // }
 
   // ✅ DELETE BLOG (Admin only)
   @Permissions('delete')

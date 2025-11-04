@@ -1,7 +1,7 @@
 // src/modules/blog/blog.service.ts
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, ILike } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Blog } from './entities/blog.entity';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
@@ -27,7 +27,57 @@ export class BlogService {
     private readonly paginationService: PaginationService,
   ) {}
 
-  async create(data: CreateBlogDto, user?: User) {
+  // ✅ CREATE BLOG
+  async create(data: CreateBlogDto, user?: User, files?: Express.Multer.File[]) {
+    console.log('=== DEBUG START ===');
+    console.log('📝 Original data:', data);
+    console.log(
+      '📁 Files received:',
+      files?.map((f) => ({
+        fieldname: f.fieldname,
+        filename: f.filename,
+        originalname: f.originalname,
+      })),
+    );
+
+    // ✅ Handle uploaded files using the existing UploadsService
+    if (files?.length) {
+      const allowedFields = ['thumbnail', 'image'];
+
+      // Create a temporary object to avoid modifying the original data directly
+      const fileData: any = {};
+
+      // Map files to the temporary object
+      this.uploadsService.mapFilesToData(files, fileData, allowedFields);
+
+      console.log('🔄 File data after mapFilesToData:', fileData);
+
+      // Convert field names to match your entity
+      if (fileData['thumbnail']) {
+        data.thumbnailUrl = fileData['thumbnail'];
+        console.log('✅ Thumbnail URL set:', data.thumbnailUrl);
+      }
+
+      // Handle multiple images
+      if (fileData['image']) {
+        if (Array.isArray(fileData['image'])) {
+          data.image = fileData['image'];
+        } else {
+          data.image = [fileData['image']]; // Convert single image to array
+        }
+        console.log('✅ Images set:', data.image);
+      } else {
+        console.log('❌ No images found in fileData');
+      }
+    }
+
+    console.log('🎯 Final data before save:', {
+      thumbnailUrl: data.thumbnailUrl,
+      image: data.image,
+    });
+    console.log('=== DEBUG END ===');
+
+    // ... rest of your existing create method
     // ✅ Check if page exists
     const page = await this.pageRepo.findOne({ where: { id: data.pageId } });
     if (!page) throw new NotFoundException(`Page with ID ${data.pageId} not found`);
@@ -65,7 +115,7 @@ export class BlogService {
     const existingBlog = await this.blogRepo.findOne({ where: { slug } });
     if (existingBlog) throw new ConflictException(`A blog with slug "${slug}" already exists`);
 
-    // ✅ Create blog entity
+    // ✅ Create blog entity with file URLs
     const blog = this.blogRepo.create({
       ...data,
       slug,
@@ -79,71 +129,11 @@ export class BlogService {
     // ✅ Save blog
     const savedBlog = await this.blogRepo.save(blog);
 
-    // ✅ Prepare OpenGraph and Twitter metadata
-    const metaTitle = savedBlog?.metaData.metaTitle || savedBlog.title;
-    const metaDescription =
-      savedBlog?.metaData?.metaDescription ||
-      savedBlog.subtitle ||
-      savedBlog.content?.substring(0, 160) ||
-      'Explore this blog on Optionia.';
-    const pageUrl = `https://optionia.com${page.url.startsWith('/') ? page.url : '/' + page.url}`;
-
-    const openGraph = {
-      title: metaTitle,
-      description: metaDescription,
-      url: pageUrl,
-      type: 'website',
-    };
-
-    const twitter = {
-      card: 'summary_large_image',
-      title: metaTitle,
-      description: metaDescription,
-    };
-
-    // ✅ Transform for response
-    return {
-      id: savedBlog.id,
-      title: savedBlog.title,
-      slug: savedBlog.slug,
-      subtitle: savedBlog.subtitle,
-      content: savedBlog.content,
-      page: {
-        id: page.id,
-        name: page.name,
-        url: page.url,
-      },
-      category: {
-        id: category.id,
-        name: category.name,
-      },
-      authors: authors.map((a) => ({
-        id: a.id,
-        username: a.username,
-        email: a.email,
-        profileImage: a.profileImage,
-      })),
-      tags: tags.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
-      metaTitle,
-      metaDescription,
-      metaKeywords: savedBlog?.metaData?.metaKeywords || [],
-      metaImage: savedBlog?.metaData?.metaImage,
-      openGraph,
-      twitter,
-      createdBy: user
-        ? {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            profileImage: user.profileImage,
-          }
-        : null,
-      createdAt: savedBlog.createdAt,
-      updatedAt: savedBlog.updatedAt,
-    };
+    // ✅ Return the complete response including file URLs
+    return this.transformBlogResponse(savedBlog);
   }
 
-  // Update your getAll method in blog.service.ts
+  // ✅ GET ALL BLOGS WITH FILTERS AND PAGINATION
   async getAll(filters: BlogFilterDto): Promise<PaginatedResponse<Blog>> {
     const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' } = filters;
     const skip = (page - 1) * limit;
@@ -221,7 +211,7 @@ export class BlogService {
     return this.getAll(filters);
   }
 
-  // update
+  // ✅ UPDATE BLOG
   async update(
     id: number,
     data: UpdateBlogDto,
@@ -235,18 +225,21 @@ export class BlogService {
     });
     if (!blog) throw new NotFoundException('Blog not found');
 
+    // ✅ Handle page update
     if (data.pageId) {
       const page = await this.pageRepo.findOne({ where: { id: data.pageId } });
       if (!page) throw new NotFoundException('Page not found');
       blog.page = page;
     }
 
+    // ✅ Handle category update
     if (data.categoryId) {
       const category = await this.categoryRepo.findOne({ where: { id: data.categoryId } });
       if (!category) throw new NotFoundException('Category not found');
       blog.category = category;
     }
 
+    // ✅ Handle authors update
     if (data.authorIds?.length) {
       const authors = await this.userRepo.find({ where: { id: In(data.authorIds) } });
       if (authors.length !== data.authorIds.length) {
@@ -255,6 +248,7 @@ export class BlogService {
       blog.authors = authors;
     }
 
+    // ✅ Handle tags update
     if (data.tagIds?.length) {
       const tags = await this.tagRepo.find({ where: { id: In(data.tagIds) } });
       if (tags.length !== data.tagIds.length) {
@@ -263,52 +257,83 @@ export class BlogService {
       blog.tags = tags;
     }
 
+    // ✅ Handle file uploads with imageIndexMap for specific image replacement
     if (files?.length) {
-      this.uploadsService.mapFilesToData(files, data as any, ['thumbnailUrl', 'image'], blog, {
+      // Prepare the existing data structure for mapFilesToData
+      const existingData = {
+        thumbnailUrl: blog.thumbnailUrl,
+        image: blog.image || [],
+      };
+
+      // Use the UploadsService to handle file mapping with index replacement
+      this.uploadsService.mapFilesToData(files, data as any, ['thumbnailUrl', 'image'], existingData, {
         arrayIndex: imageIndexMap,
       });
+
+      // Apply the file changes to the blog entity
+      if (data.thumbnailUrl !== undefined) {
+        blog.thumbnailUrl = data.thumbnailUrl;
+      }
+
+      if (data.image !== undefined) {
+        blog.image = data.image;
+      }
     }
 
+    // ✅ Handle slug update if title changed
     if (data.title && data.title !== blog.title) {
       blog.slug = data.slug || slugify(data.title);
     }
 
+    // ✅ Update other fields
     Object.assign(blog, data);
 
+    // ✅ Update createdBy if user provided
     if (user) {
       blog.createdBy = user;
     }
 
+    // ✅ Save updated blog
     const updatedBlog = await this.blogRepo.save(blog);
 
-    return {
-      ...updatedBlog,
-      page: updatedBlog.page.name,
-      createdBy: updatedBlog.createdBy
-        ? {
-            id: updatedBlog.createdBy.id,
-            username: updatedBlog.createdBy.username,
-            email: updatedBlog.createdBy.email,
-            profileImage: updatedBlog.createdBy.profileImage,
-          }
-        : null,
-      tags: updatedBlog.tags?.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
-      authors: updatedBlog.authors?.map((a) => ({
-        id: a.id,
-        username: a.username,
-        email: a.email,
-        profileImage: a.profileImage,
-      })),
-    };
+    // ✅ Return transformed response
+    return this.transformBlogResponse(updatedBlog);
   }
 
-  // delete
+  // ✅ DELETE BLOG
   async delete(id: number) {
     const blog = await this.blogRepo.findOne({ where: { id } });
     if (!blog) throw new NotFoundException('Blog not found');
+
+    // Optional: Delete associated files
+    if (blog.thumbnailUrl) {
+      const fullPath = '.' + blog.thumbnailUrl;
+      try {
+        if (require('fs').existsSync(fullPath)) {
+          require('fs').unlinkSync(fullPath);
+        }
+      } catch (error) {
+        console.warn('Could not delete thumbnail file:', error);
+      }
+    }
+
+    if (blog.image?.length) {
+      blog.image.forEach((img) => {
+        const fullPath = '.' + img;
+        try {
+          if (require('fs').existsSync(fullPath)) {
+            require('fs').unlinkSync(fullPath);
+          }
+        } catch (error) {
+          console.warn('Could not delete image file:', error);
+        }
+      });
+    }
+
     return this.blogRepo.remove(blog);
   }
 
+  // ✅ GET BLOG BY ID
   async getById(id: number) {
     const blog = await this.blogRepo.findOne({
       where: { id },
@@ -317,80 +342,10 @@ export class BlogService {
 
     if (!blog) throw new NotFoundException('Blog not found');
 
-    // Build OpenGraph and Twitter meta
-    const metaTitle = blog.metaData?.metaTitle || blog.title;
-    const metaDescription =
-      blog.metaData?.metaDescription ||
-      blog.subtitle ||
-      blog.content?.substring(0, 160) ||
-      'Explore this blog on Optionia.';
-    const pageUrl = `https://optionia.com/${blog.page?.slug || 'blog'}`;
-
-    const openGraph = {
-      title: metaTitle,
-      description: metaDescription,
-      url: pageUrl,
-      type: 'website',
-    };
-
-    const twitter = {
-      card: 'summary_large_image',
-      title: metaTitle,
-      description: metaDescription,
-    };
-
-    // Return clean response
-    return {
-      id: blog.id,
-      title: blog.title,
-      slug: blog.slug,
-      subtitle: blog.subtitle,
-      content: blog.content,
-      thumbnailUrl: blog.thumbnailUrl,
-      image: blog.image,
-      metaData: blog.metaData,
-      readingTime: blog.readingTime,
-      wordCount: blog.wordCount,
-      featured: blog.featured,
-      blogType: blog.blogType,
-      status: blog.status,
-      page: blog.page
-        ? {
-            id: blog.page.id,
-            name: blog.page.name,
-            slug: blog.page.slug,
-          }
-        : null,
-      category: blog.category
-        ? {
-            id: blog.category.id,
-            name: blog.category.name,
-            slug: blog.category.slug,
-          }
-        : null,
-      tags: blog.tags?.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
-      authors: blog.authors?.map((a) => ({
-        id: a.id,
-        username: a.username,
-        email: a.email,
-        profileImage: a.profileImage,
-      })),
-      createdBy: blog.createdBy
-        ? {
-            id: blog.createdBy.id,
-            username: blog.createdBy.username,
-            email: blog.createdBy.email,
-            profileImage: blog.createdBy.profileImage,
-          }
-        : null,
-      createdAt: blog.createdAt,
-      updatedAt: blog.updatedAt,
-      openGraph,
-      twitter,
-    };
+    return this.transformBlogResponse(blog);
   }
 
-  // Add this method to your BlogService
+  // ✅ GET BLOG BY SLUG
   async getBySlug(slug: string) {
     const blog = await this.blogRepo.findOne({
       where: { slug },
@@ -399,79 +354,7 @@ export class BlogService {
 
     if (!blog) throw new NotFoundException(`Blog with slug "${slug}" not found`);
 
-    // Build OpenGraph and Twitter meta
-    const metaTitle = blog.metaData?.metaTitle || blog.title;
-    const metaDescription =
-      blog.metaData?.metaDescription ||
-      blog.subtitle ||
-      blog.content?.substring(0, 160) ||
-      'Explore this blog on Optionia.';
-    const pageUrl = `https://optionia.com/${blog.page?.slug || 'blog'}/${blog.slug}`;
-
-    const openGraph = {
-      title: metaTitle,
-      description: metaDescription,
-      url: pageUrl,
-      type: 'article', // Changed to 'article' for individual blog posts
-      image: blog.thumbnailUrl || blog.image?.[0], // Use thumbnail or first image
-    };
-
-    const twitter = {
-      card: 'summary_large_image',
-      title: metaTitle,
-      description: metaDescription,
-      image: blog.thumbnailUrl || blog.image?.[0],
-    };
-
-    // Return clean response
-    return {
-      id: blog.id,
-      title: blog.title,
-      slug: blog.slug,
-      subtitle: blog.subtitle,
-      content: blog.content,
-      thumbnailUrl: blog.thumbnailUrl,
-      image: blog.image,
-      metaData: blog.metaData,
-      readingTime: blog.readingTime,
-      wordCount: blog.wordCount,
-      featured: blog.featured,
-      blogType: blog.blogType,
-      status: blog.status,
-      page: blog.page
-        ? {
-            id: blog.page.id,
-            name: blog.page.name,
-            slug: blog.page.slug,
-          }
-        : null,
-      category: blog.category
-        ? {
-            id: blog.category.id,
-            name: blog.category.name,
-            slug: blog.category.slug,
-          }
-        : null,
-      tags: blog.tags?.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
-      authors: blog.authors?.map((a) => ({
-        id: a.id,
-        username: a.username,
-        email: a.email,
-        profileImage: a.profileImage,
-      })),
-      createdBy: blog.createdBy
-        ? {
-            id: blog.createdBy.id,
-            username: blog.createdBy.username,
-            email: blog.createdBy.email,
-            profileImage: blog.createdBy.profileImage,
-          }
-        : null,
-      createdAt: blog.createdAt,
-      updatedAt: blog.updatedAt,
-      openGraph,
-      twitter,
-    };
+    return this.transformBlogResponse(blog);
   }
 
   // ✅ GET BLOG PAGE WITH BLOGS
@@ -489,80 +372,18 @@ export class BlogService {
       // Get blogs with pagination and filters
       const blogsResponse = await this.getAll(filters);
 
-      // Transform blogs to include OpenGraph & Twitter metadata
-      const blogs = blogsResponse.data.map((blog) => {
-        const metaTitle = blog.metaData?.metaTitle || blog.title;
-        const metaDescription =
-          blog.metaData?.metaDescription ||
-          blog.subtitle ||
-          (blog.content ? blog.content.replace(/<[^>]+>/g, '').substring(0, 160) : '');
-        const blogUrl = `https://optionia.com/${blog.slug}`;
-
-        const openGraph = {
-          title: metaTitle,
-          description: metaDescription,
-          url: blogUrl,
-          type: 'website',
-        };
-
-        const twitter = {
-          card: 'summary_large_image',
-          title: metaTitle,
-          description: metaDescription,
-        };
-
-        return {
-          id: blog.id,
-          title: blog.title,
-          slug: blog.slug,
-          subtitle: blog.subtitle,
-          content: blog.content,
-          thumbnailUrl: blog.thumbnailUrl,
-          image: blog.image,
-          metaData: blog.metaData,
-          readingTime: blog.readingTime,
-          wordCount: blog.wordCount,
-          featured: blog.featured,
-          blogType: blog.blogType,
-          status: blog.status,
-          page: blog.page
-            ? {
-                id: blog.page.id,
-                name: blog.page.name,
-                slug: blog.page.slug,
-              }
-            : null,
-          category: blog.category
-            ? {
-                id: blog.category.id,
-                name: blog.category.name,
-                slug: blog.category.slug,
-              }
-            : null,
-          tags: blog.tags?.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
-          authors: blog.authors?.map((a) => ({
-            id: a.id,
-            username: a.username,
-            email: a.email,
-            profileImage: a.profileImage,
-          })),
-          createdBy: blog.createdBy
-            ? {
-                id: blog.createdBy.id,
-                username: blog.createdBy.username,
-                email: blog.createdBy.email,
-                profileImage: blog.createdBy.profileImage,
-              }
-            : null,
-          createdAt: blog.createdAt,
-          updatedAt: blog.updatedAt,
-          openGraph,
-          twitter,
-        };
-      });
+      // Transform blogs to include metadata
+      const blogs = blogsResponse.data.map((blog) => this.transformBlogResponse(blog));
 
       return {
-        page,
+        page: {
+          id: page.id,
+          name: page.name,
+          title: page.title,
+          description: page.description,
+          slug: page.slug,
+          url: page.url,
+        },
         blogs,
         pagination: blogsResponse.meta,
       };
@@ -570,6 +391,83 @@ export class BlogService {
       console.error('Error in getBlogPage:', error);
       throw error;
     }
+  }
+
+  // ✅ PRIVATE HELPER METHODS
+
+  private transformBlogResponse(blog: Blog) {
+    const metaTitle = blog.metaData?.metaTitle || blog.title;
+    const metaDescription =
+      blog.metaData?.metaDescription ||
+      blog.subtitle ||
+      (blog.content ? blog.content.replace(/<[^>]+>/g, '').substring(0, 160) : '') ||
+      'Explore this blog on Optionia.';
+
+    const pageUrl = `https://optionia.com/${blog.page?.slug || 'blog'}/${blog.slug}`;
+
+    const openGraph = {
+      title: metaTitle,
+      description: metaDescription,
+      url: pageUrl,
+      type: 'article',
+      image: blog.thumbnailUrl || blog.image?.[0],
+    };
+
+    const twitter = {
+      card: 'summary_large_image',
+      title: metaTitle,
+      description: metaDescription,
+      image: blog.thumbnailUrl || blog.image?.[0],
+    };
+
+    return {
+      id: blog.id,
+      title: blog.title,
+      slug: blog.slug,
+      subtitle: blog.subtitle,
+      content: blog.content,
+      thumbnailUrl: blog.thumbnailUrl,
+      image: blog.image,
+      metaData: blog.metaData,
+      readingTime: blog.readingTime,
+      wordCount: blog.wordCount,
+      featured: blog.featured,
+      blogType: blog.blogType,
+      status: blog.status,
+      page: blog.page
+        ? {
+            id: blog.page.id,
+            name: blog.page.name,
+            slug: blog.page.slug,
+          }
+        : null,
+      category: blog.category
+        ? {
+            id: blog.category.id,
+            name: blog.category.name,
+            slug: blog.category.slug,
+          }
+        : null,
+      tags: blog.tags?.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
+      authors: blog.authors?.map((a) => ({
+        id: a.id,
+        username: a.username,
+        email: a.email,
+        profileImage: a.profileImage,
+      })),
+      createdBy: blog.createdBy
+        ? {
+            id: blog.createdBy.id,
+            username: blog.createdBy.username,
+            email: blog.createdBy.email,
+            profileImage: blog.createdBy.profileImage,
+          }
+        : null,
+      createdAt: blog.createdAt,
+      updatedAt: blog.updatedAt,
+      openGraph,
+      twitter,
+    };
   }
 
   private async createDefaultBlogPage() {
@@ -591,9 +489,12 @@ export class BlogService {
 
     return {
       page: {
+        id: savedPage.id,
         name: savedPage.name,
         title: savedPage.title,
         description: savedPage.description,
+        slug: savedPage.slug,
+        url: savedPage.url,
       },
       blogs: [],
       pagination: {
@@ -605,6 +506,60 @@ export class BlogService {
         hasPrev: false,
       },
     };
+  }
+
+  // ✅ BULK OPERATIONS (Optional)
+  async bulkDelete(ids: number[]) {
+    const blogs = await this.blogRepo.find({ where: { id: In(ids) } });
+
+    if (blogs.length !== ids.length) {
+      throw new NotFoundException('Some blogs not found');
+    }
+
+    // Delete associated files
+    blogs.forEach((blog) => {
+      if (blog.thumbnailUrl) {
+        const fullPath = '.' + blog.thumbnailUrl;
+        try {
+          if (require('fs').existsSync(fullPath)) {
+            require('fs').unlinkSync(fullPath);
+          }
+        } catch (error) {
+          console.warn('Could not delete thumbnail file:', error);
+        }
+      }
+
+      if (blog.image?.length) {
+        blog.image.forEach((img) => {
+          const fullPath = '.' + img;
+          try {
+            if (require('fs').existsSync(fullPath)) {
+              require('fs').unlinkSync(fullPath);
+            }
+          } catch (error) {
+            console.warn('Could not delete image file:', error);
+          }
+        });
+      }
+    });
+
+    return this.blogRepo.remove(blogs);
+  }
+
+  async updateStatus(id: number, status: string) {
+    const blog = await this.blogRepo.findOne({ where: { id } });
+    if (!blog) throw new NotFoundException('Blog not found');
+
+    blog.status = status;
+    return this.blogRepo.save(blog);
+  }
+
+  async toggleFeatured(id: number) {
+    const blog = await this.blogRepo.findOne({ where: { id } });
+    if (!blog) throw new NotFoundException('Blog not found');
+
+    blog.featured = !blog.featured;
+    return this.blogRepo.save(blog);
   }
 }
 

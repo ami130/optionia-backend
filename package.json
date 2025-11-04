@@ -6,8 +6,8 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "prebuild": "npm install -g @nestjs/cli && npm install",
-    "build": "nest build",
+    "prebuild": "npm install -g @nestjs/cli",
+    "build": "npm install --legacy-peer-deps && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:prod": "node dist/main.js",
     "start:build": "npm run build && npm run start:prod",
@@ -20,14 +20,18 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typeorm": "ts-node ./node_modules/typeorm/cli -d data-source.ts",
     "migration:create": "npm run typeorm -- migration:create",
     "migration:generate": "npm run typeorm -- migration:generate",
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
     "migration:show": "npm run typeorm -- migration:show",
     "schema:sync": "npm run typeorm -- schema:sync",
-    "schema:drop": "npm run typeorm -- schema:drop"
+    "schema:drop": "npm run typeorm -- schema:drop",
+    "typeorm": "npm run build && npx typeorm -d dist/src/data-source.js",
+    "db:migrate": "npm run build && npm run migration:run"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "dependencies": {
     "@nestjs/class-transformer": "^0.4.0",

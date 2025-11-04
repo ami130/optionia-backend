@@ -17,7 +17,6 @@ import { PagesModule } from './modules/pages/pages.module';
 import { UploadsController } from './modules/uploads/uploads.controller';
 import { UploadsService } from './modules/uploads/uploads.service';
 import { UploadsModule } from './modules/uploads/Upload.moudle';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { WebsiteDataModule } from './modules/website-data/website-data.module';
 import { SectionModule } from './modules/sections/sections.module';
@@ -32,10 +31,7 @@ import { ModuleMiddleware } from './common/middlewares/module.middleware';
 
 @Module({
   imports: [
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-      serveRoot: '/public',
-    }),
+  
     ConfigModule.forRoot({
       isGlobal: true,
     }),

@@ -1,0 +1,22 @@
+# render.yaml
+services:
+  - type: web
+    name: organica-backend
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+    healthCheckPath: /health
+
+databases:
+  - name: organica-db
+    plan: free
+    databaseName: organica
+    user: organica_user

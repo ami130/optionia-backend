@@ -72,36 +72,26 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector), apiResponseInterceptor);
   app.useGlobalFilters(new TypeOrmExceptionFilter());
 
-  // ✅ CORS configuration for production
-  const isProduction = NODE_ENV === 'production';
-  const allowedOrigins = isProduction
-    ? [
-        'https://your-frontend-domain.onrender.com',
-        'https://optionia-web.vercel.app',
-        'https://optionia-dashboard.vercel.app', // Your frontend URL
-        'https://optionia-backend.onrender.com', // Your backend URL
-      ]
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
+  // ✅ FIXED CORS configuration - SIMPLE ARRAY APPROACH
+  const allowedOrigins = [
+    'https://optionia.com',
+    'https://optionia-dashboard.vercel.app',
+    'https://optionia-web.vercel.app',
+    'https://optionia-backend.onrender.com',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+
+  logger.log(`✅ Allowed CORS origins: ${JSON.stringify(allowedOrigins)}`);
 
   app.enableCors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        return callback(null, true);
-      } else {
-        logger.warn(`🚫 CORS blocked: ${origin}`);
-        return callback(new Error('Not allowed by CORS'), false);
-      }
-    },
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    origin: allowedOrigins, // Simple array - no complex callback
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
-    allowedHeaders: 'Content-Type, Authorization, Accept',
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
   });
 
-  // ✅ Health check endpoint - CORRECT WAY
-  // Create a simple controller for health check or use app.getHttpAdapter()
+  // ✅ Health check endpoint
   const server = app.getHttpAdapter().getInstance();
 
   server.get('/health', (req: Request, res: any) => {
@@ -118,6 +108,7 @@ async function bootstrap() {
   await app.listen(PORT, '0.0.0.0');
   logger.log(`🎉 Application running on port ${PORT} in ${NODE_ENV} mode`);
   logger.log(`🌐 Health check: http://0.0.0.0:${PORT}/health`);
+  logger.log(`✅ CORS enabled for ${allowedOrigins.length} origins including optionia-dashboard.vercel.app`);
 }
 
 bootstrap().catch((err) => {

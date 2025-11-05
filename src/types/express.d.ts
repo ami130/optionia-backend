@@ -1,5 +1,14 @@
-// src/types/express.d.ts
-declare module 'express' {
-  import * as express from 'express';
-  export = express;
+import * as express from 'express';
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        userId: number;
+        username: string;
+        role: string;
+      };
+      routeModule?: string;
+    }
+  }
 }

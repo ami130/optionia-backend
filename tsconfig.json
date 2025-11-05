@@ -3,12 +3,12 @@
     "module": "commonjs",
     "declaration": false,
     "removeComments": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
     "target": "ES2020",
-    "sourceMap": true,
+    "sourceMap": false,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
@@ -18,7 +18,7 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "typeRoots": ["./node_modules/@types"],
-    "types": ["node", "express"]
-  }
+    "types": ["node"]
+  },
+  "include": ["src/**/*", "types/**/*"]
 }

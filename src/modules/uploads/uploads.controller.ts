@@ -1,12 +1,5 @@
 // src/modules/uploads/uploads.controller.ts
-import {
-  Controller,
-  Post,
-  UploadedFile,
-  UseInterceptors,
-  BadRequestException,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, UploadedFile, UseInterceptors, BadRequestException, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadsService } from './uploads.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -37,7 +30,6 @@ export class UploadsController {
     };
   }
 }
-
 
 // // src/modules/uploads/uploads.controller.ts
 // import { Controller, Post, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';

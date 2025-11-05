@@ -2,6 +2,8 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { typeOrmConfig } from './config/typeorm.config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -17,7 +19,6 @@ import { PagesModule } from './modules/pages/pages.module';
 import { UploadsController } from './modules/uploads/uploads.controller';
 import { UploadsService } from './modules/uploads/uploads.service';
 import { UploadsModule } from './modules/uploads/Upload.moudle';
-import { join } from 'path';
 import { WebsiteDataModule } from './modules/website-data/website-data.module';
 import { SectionModule } from './modules/sections/sections.module';
 import { RolesModule } from './roles/roles.module';
@@ -31,7 +32,12 @@ import { ModuleMiddleware } from './common/middlewares/module.middleware';
 
 @Module({
   imports: [
-  
+    // ✅ Serve static files - ADD THIS
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/public',
+    }),
+
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -66,7 +72,6 @@ export class AppModule implements NestModule {
     consumer.apply(ModuleMiddleware).forRoutes('*'); // Apply to all routes
   }
 }
-
 // /* eslint-disable prettier/prettier */
 // import { Module } from '@nestjs/common';
 // import { TypeOrmModule } from '@nestjs/typeorm';

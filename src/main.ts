@@ -76,10 +76,11 @@ async function bootstrap() {
   const isProduction = NODE_ENV === 'production';
   const allowedOrigins = isProduction
     ? [
-        'https://your-frontend-domain.onrender.com', // Your frontend URL
-        'https://organica-backend.onrender.com', // Your backend URL
+        'https://your-frontend-domain.onrender.com',
+        'https://optionia-web.vercel.app', // Your frontend URL
+        'https://optionia-backend.onrender.com', // Your backend URL
       ]
-    : ['http://localhost:3000', 'http://localhost:3001'];
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
 
   app.enableCors({
     origin: (origin, callback) => {

@@ -53,10 +53,16 @@ export class User {
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword() {
+    console.log('🔐 Entity - hashPassword called');
+    console.log('🔐 Password before hash:', this.password?.substring(0, 10) + '...');
+
     // Only hash if password is modified and not already hashed
     if (this.password && !this.password.startsWith('$2b$')) {
       const saltRounds = 10;
       this.password = await bcrypt.hash(this.password, saltRounds);
+      console.log('🔐 Password after hash:', this.password.substring(0, 20) + '...');
+    } else {
+      console.log('🔐 Password already hashed or empty');
     }
   }
 

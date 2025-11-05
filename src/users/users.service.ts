@@ -147,8 +147,6 @@ export class UsersService {
 
   // ✅ Seed default Admin
 
-
-  
   async seedAdmin(adminEmail = 'admin@example.com', adminPassword = 'admin123') {
     const existing = await this.userRepo.findOne({ where: { email: adminEmail } });
     if (existing) return existing;
@@ -165,8 +163,8 @@ export class UsersService {
     const user = this.userRepo.create({
       username: 'admin',
       email: adminEmail,
-      password: adminPassword,
-      ...(adminRole && { role: adminRole }),
+      password: adminPassword, // Plain text - entity hooks will hash it
+      role: adminRole,
     });
 
     await this.userRepo.save(user);

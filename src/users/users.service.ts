@@ -146,6 +146,9 @@ export class UsersService {
   }
 
   // ✅ Seed default Admin
+
+
+  
   async seedAdmin(adminEmail = 'admin@example.com', adminPassword = 'admin123') {
     const existing = await this.userRepo.findOne({ where: { email: adminEmail } });
     if (existing) return existing;

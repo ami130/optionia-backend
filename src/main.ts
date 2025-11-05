@@ -88,7 +88,16 @@ async function bootstrap() {
     origin: allowedOrigins, // Simple array - no complex callback
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'Access-Control-Allow-Headers',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers',
+    ],
   });
 
   // ✅ Health check endpoint

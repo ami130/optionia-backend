@@ -77,7 +77,8 @@ async function bootstrap() {
   const allowedOrigins = isProduction
     ? [
         'https://your-frontend-domain.onrender.com',
-        'https://optionia-web.vercel.app', // Your frontend URL
+        'https://optionia-web.vercel.app',
+        'https://optionia-dashboard.vercel.app', // Your frontend URL
         'https://optionia-backend.onrender.com', // Your backend URL
       ]
     : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];

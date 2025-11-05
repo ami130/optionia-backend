@@ -6,6 +6,8 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "prebuild": "npm install -g @nestjs/cli",
+    "build": "npm install --legacy-peer-deps && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:prod": "node dist/main.js",
     "start:build": "npm run build && npm run start:prod",
@@ -26,11 +28,8 @@
     "schema:sync": "npm run typeorm -- schema:sync",
     "schema:drop": "npm run typeorm -- schema:drop",
     "typeorm": "npm run build && npx typeorm -d dist/src/data-source.js",
-    "db:migrate": "npm run build && npm run migration:run",
-    "build": "nest build",
-    "prebuild": "npm run prebuild:copy && npm run prebuild:assets",
-    "prebuild:copy": "cp -r public dist/ || true",
-    "prebuild:assets": "mkdir -p dist/public/uploads || true"
+    "db:migrate": "npm run build && npm run migration:run"
+    
   },
   "engines": {
     "node": ">=20.0.0",

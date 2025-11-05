@@ -6,4 +6,5 @@ export const ModulesForRole = [
   // { name: 'Page', slug: 'page' },
   { name: 'Permission', slug: 'permission' },
   { name: 'Users', slug: 'users' },
+  { name: 'Role', slug: 'role' },
 ];

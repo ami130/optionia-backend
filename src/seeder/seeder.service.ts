@@ -9,6 +9,7 @@ import { Permission } from 'src/roles/entities/permission.entity/permission.enti
 import { Role } from 'src/roles/entities/role.entity';
 import { RoleModulePermission } from 'src/roles/entities/role-module-permission/role-module-permission.entity';
 import { ModulesService } from 'src/roles/modules/modules.service';
+import { PageSeederService } from './page-seeder.service'; // Import the new service
 
 @Injectable()
 export class SeederService {
@@ -21,6 +22,7 @@ export class SeederService {
     @InjectRepository(RoleModulePermission) private rmpRepo: Repository<RoleModulePermission>,
     private readonly usersService: UsersService,
     private readonly modulesService: ModulesService,
+    private readonly pageSeederService: PageSeederService, // Inject page seeder
   ) {}
 
   async seed() {
@@ -41,7 +43,7 @@ export class SeederService {
         }
       }
 
-      // ✅ Call seedBaseModules to create all modules
+      // ✅ Call seedBaseModules to create all modules (including Role)
       this.logger.log('Seeding base modules...');
       await this.modulesService.seedBaseModules();
       this.logger.log('✅ Base modules seeded');
@@ -57,10 +59,16 @@ export class SeederService {
         this.logger.log('ℹ️ Admin role already exists');
       }
 
-      // ✅ Assign all permissions to admin for ALL modules
+      // ✅ Assign all permissions to admin for ALL modules (including Role module)
       this.logger.log('Assigning permissions to admin role...');
       await this.assignAllPermissionsToAdmin(adminRole);
       this.logger.log('✅ Admin permissions assigned');
+
+      // ✅ Seed Blog Page and Default Pages
+      this.logger.log('Seeding pages...');
+      await this.pageSeederService.seedBlogPage();
+      await this.pageSeederService.seedDefaultPages();
+      this.logger.log('✅ Pages seeded');
 
       // Seed Admin User
       this.logger.log('Seeding admin user...');

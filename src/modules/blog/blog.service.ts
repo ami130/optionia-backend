@@ -360,36 +360,124 @@ export class BlogService {
   // ✅ GET BLOG PAGE WITH BLOGS
   async getBlogPage(filters: BlogFilterDto) {
     try {
-      // Find the blog page
-      const page = await this.pageRepo.findOne({
-        where: { url: 'blog', isActive: true },
+      console.log('🔍 Getting blog page...');
+
+      // ✅ Find existing blog page with multiple fallbacks
+      let page = await this.pageRepo.findOne({
+        where: { url: '/blog', isActive: true },
       });
 
+      // If not found by URL, try by slug
       if (!page) {
-        return await this.createDefaultBlogPage();
+        page = await this.pageRepo.findOne({
+          where: { slug: 'blog', isActive: true },
+        });
       }
 
-      // Get blogs with pagination and filters
       const blogsResponse = await this.getAll(filters);
-
-      // Transform blogs to include metadata
       const blogs = blogsResponse.data.map((blog) => this.transformBlogResponse(blog));
 
+      // ✅ If no page exists, use virtual page
+      if (!page) {
+        console.log('ℹ️ No blog page found, using virtual page');
+
+        const virtualPage = {
+          id: 0,
+          name: 'Blog',
+          title: 'Blog - Optionia',
+          description: 'Read our latest blog posts and articles',
+          slug: 'blog',
+          url: '/blog',
+          subtitle: null,
+          navbarShow: true,
+          order: 0,
+          isActive: true,
+          type: 'blog',
+          content: null,
+          metaTitle: 'Blog - Optionia',
+          metaDescription: 'Read our latest blog posts and articles',
+          metaKeywords: ['blog', 'articles', 'posts'],
+          canonicalUrl: '/blog',
+          metaImage: null,
+          backgroundImage: null,
+          backgroundColor: null,
+          textColor: null,
+          metaData: {
+            metaTitle: 'Blog - Optionia',
+            metaDescription: 'Read our latest blog posts and articles',
+            keywords: ['blog', 'articles', 'posts'],
+          },
+          parentId: null,
+          parent: null,
+          children: [],
+          blogs: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        return {
+          page: virtualPage,
+          blogs,
+          pagination: blogsResponse.meta,
+        };
+      }
+
+      // ✅ Page exists, use it
+      console.log('✅ Using existing blog page:', page.id);
+
       return {
-        page: {
-          id: page.id,
-          name: page.name,
-          title: page.title,
-          description: page.description,
-          slug: page.slug,
-          url: page.url,
-        },
+        page: { ...page }, // Spread all page properties
         blogs,
         pagination: blogsResponse.meta,
       };
     } catch (error) {
-      console.error('Error in getBlogPage:', error);
-      throw error;
+      console.error('❌ Error in getBlogPage:', error);
+
+      // ✅ Safe fallback
+      const fallbackPage = {
+        id: 0,
+        name: 'Blog',
+        title: 'Blog - Optionia',
+        description: 'Read our latest blog posts and articles',
+        slug: 'blog',
+        url: '/blog',
+        subtitle: null,
+        navbarShow: true,
+        order: 0,
+        isActive: true,
+        type: 'blog',
+        content: null,
+        metaTitle: 'Blog - Optionia',
+        metaDescription: 'Read our latest blog posts and articles',
+        metaKeywords: ['blog', 'articles', 'posts'],
+        canonicalUrl: '/blog',
+        metaImage: null,
+        backgroundImage: null,
+        backgroundColor: null,
+        textColor: null,
+        metaData: {
+          metaTitle: 'Blog - Optionia',
+          metaDescription: 'Read our latest blog posts and articles',
+          keywords: ['blog', 'articles', 'posts'],
+        },
+        parentId: null,
+        parent: null,
+        children: [],
+        blogs: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      return {
+        page: fallbackPage,
+        blogs: [],
+        pagination: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 0,
+        },
+      };
     }
   }
 
@@ -467,44 +555,6 @@ export class BlogService {
       updatedAt: blog.updatedAt,
       openGraph,
       twitter,
-    };
-  }
-
-  private async createDefaultBlogPage() {
-    const blogPage = this.pageRepo.create({
-      name: 'blog',
-      title: 'Our Blog',
-      url: 'blog',
-      slug: 'blog',
-      isActive: true,
-      navbarShow: true,
-      type: 'blog',
-      description: 'Latest articles and insights from our team',
-      metaTitle: 'Our Blog | Latest Articles',
-      metaDescription: 'Explore our latest blog posts and articles',
-      order: 2,
-    });
-
-    const savedPage = await this.pageRepo.save(blogPage);
-
-    return {
-      page: {
-        id: savedPage.id,
-        name: savedPage.name,
-        title: savedPage.title,
-        description: savedPage.description,
-        slug: savedPage.slug,
-        url: savedPage.url,
-      },
-      blogs: [],
-      pagination: {
-        total: 0,
-        page: 1,
-        limit: 10,
-        totalPages: 0,
-        hasNext: false,
-        hasPrev: false,
-      },
     };
   }
 

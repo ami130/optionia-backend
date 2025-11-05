@@ -17,7 +17,7 @@ export const typeOrmConfig: TypeOrmModuleAsyncOptions = {
         type: 'postgres',
         url: databaseUrl,
         entities: [__dirname + '/../**/*.entity.{js,ts}'],
-        synchronize: !isProduction, // false in production for safety
+        synchronize: true, // false in production for safety
         logging: !isProduction,
         logger: new TypeOrmLogger(),
         retryAttempts: 5,
@@ -36,7 +36,7 @@ export const typeOrmConfig: TypeOrmModuleAsyncOptions = {
         password: configService.get<string>('DB_PASSWORD') || 'postgres',
         database: configService.get<string>('DB_NAME') || configService.get<string>('DB_DATABASE') || 'postgres', // Support both DB_NAME and DB_DATABASE
         entities: [__dirname + '/../**/*.entity.{js,ts}'],
-        synchronize: !isProduction,
+        synchronize: true,
         logging: !isProduction,
         logger: new TypeOrmLogger(),
         retryAttempts: 5,

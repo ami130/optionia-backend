@@ -48,6 +48,7 @@ export class PagesController {
   findOne(@Param('id') id: string) {
     return this.pagesService.findOneById(+id);
   }
+  // no meta image
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)

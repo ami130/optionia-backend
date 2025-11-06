@@ -7,36 +7,40 @@ import { Permissions } from 'src/permissions/decorators/permissions.decorator';
 import { UseModule } from 'src/common/interceptors/use-module.decorator';
 import { TagsService } from './tag.service';
 
-@UseModule('tag')
-@UseGuards(JwtAuthGuard, RolesGuard, PermissionGuard)
 @Controller('tags')
 export class TagsController {
   constructor(private readonly service: TagsService) {}
 
+  // Public endpoints - no authentication required
+  @Get()
+  async findAll() {
+    return this.service.findAll();
+  }
+
+  @Get(':id')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.service.findOne(id);
+  }
+
+  // Protected endpoints - require authentication and permissions
+  @UseModule('tag')
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionGuard)
   @Permissions('create')
   @Post()
   async create(@Body() dto: tagDto) {
     return this.service.create(dto);
   }
 
-  // @Permissions('view')
-  @Get()
-  async findAll() {
-    return this.service.findAll();
-  }
-
-  @Permissions('view')
-  @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.service.findOne(id);
-  }
-
+  @UseModule('tag')
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionGuard)
   @Permissions('update')
   @Put(':id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTagDto) {
     return this.service.update(id, dto);
   }
 
+  @UseModule('tag')
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionGuard)
   @Permissions('delete')
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number) {

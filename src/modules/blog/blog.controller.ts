@@ -144,67 +144,6 @@ export class BlogController {
     return this.service.update(id, updateData, files, imageIndexMap, req.user);
   }
 
-  // @Permissions('update')
-  // @Patch(':id')
-  // @UseInterceptors(
-  //   AnyFilesInterceptor({
-  //     storage: new UploadsService().getFileStorage(),
-  //     fileFilter: new UploadsService().fileFilter,
-  //     limits: { files: 6 },
-  //   }),
-  // )
-  // async update(
-  //   @Param('id', ParseIntPipe) id: number,
-  //   @Body() dto: UpdateBlogDto,
-  //   @Req() req: any,
-  //   @UploadedFiles() files?: Express.Multer.File[],
-  // ) {
-  //   // Parse imageIndexMap from the request body if provided
-  //   let imageIndexMap: Record<string, number> = {};
-
-  //   try {
-  //     if (dto.imageIndexMap && typeof dto.imageIndexMap === 'string') {
-  //       imageIndexMap = JSON.parse(dto.imageIndexMap);
-  //     } else if (typeof dto.imageIndexMap === 'object') {
-  //       imageIndexMap = dto.imageIndexMap;
-  //     }
-  //     // Remove imageIndexMap from dto as it's not part of the entity
-  //     delete dto.imageIndexMap;
-  //   } catch (error) {
-  //     throw new BadRequestException('Invalid imageIndexMap format');
-  //   }
-
-  //   // Validate image files count
-  //   const imageFiles = (files || []).filter((f) => f.fieldname === 'image');
-  //   if (imageFiles.length > 5) {
-  //     throw new BadRequestException('You can upload up to 5 images only.');
-  //   }
-
-  //   return this.service.update(id, dto, files, imageIndexMap, req.user);
-  // }
-
-  // @Permissions('update')
-  // @Patch(':id')
-  // @UseInterceptors(
-  //   AnyFilesInterceptor({
-  //     storage: new UploadsService().getFileStorage(),
-  //     fileFilter: new UploadsService().fileFilter,
-  //     limits: { files: 6 },
-  //   }),
-  // )
-  // async update(
-  //   @Param('id', ParseIntPipe) id: number,
-  //   @Body() dto: UpdateBlogDto,
-  //   @UploadedFiles() files?: Express.Multer.File[],
-  //   @Body('imageIndexMap') imageIndexMap?: Record<string, number>,
-  // ) {
-  //   const imageFiles = (files || []).filter((f) => f.fieldname === 'image');
-  //   if (imageFiles.length > 5) {
-  //     throw new BadRequestException('You can upload up to 5 images only.');
-  //   }
-  //   return this.service.update(id, dto, files, imageIndexMap);
-  // }
-
   // ✅ DELETE BLOG (Admin only)
   @Permissions('delete')
   @Delete(':id')

@@ -72,12 +72,6 @@ export class Page {
   @Column({ nullable: true })
   canonicalUrl?: string;
 
-  @Column({ type: 'json', nullable: true })
-  metaImage?: { url: string; alt?: string };
-
-  @Column({ nullable: true })
-  backgroundImage?: string;
-
   @Column({ nullable: true })
   backgroundColor?: string;
 
@@ -101,6 +95,12 @@ export class Page {
 
   @Column({ nullable: true })
   parentId?: number;
+
+  @Column({ nullable: true })
+  backgroundImage?: string;
+
+  @Column({ type: 'json', nullable: true })
+  metaImage?: { url: string; alt?: string };
 
   @OneToMany(() => Page, (page) => page.parent, {
     cascade: true,

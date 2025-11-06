@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { PagesService } from './pages.service';
 import { CreatePageDto } from './dto/create-page.dto';
 import { UpdatePageDto } from './dto/update-page.dto';
@@ -6,6 +17,8 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enum/userRole.enum';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadsService } from '../uploads/uploads.service';
 
 @Controller('pages')
 export class PagesController {
@@ -14,8 +27,14 @@ export class PagesController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  create(@Body() createPageDto: CreatePageDto) {
-    return this.pagesService.create(createPageDto);
+  @UseInterceptors(
+    FileInterceptor('backgroundImage', {
+      storage: new UploadsService().getFileStorage(),
+      fileFilter: new UploadsService().fileFilter,
+    }),
+  )
+  create(@Body() createPageDto: CreatePageDto, @UploadedFile() file?: Express.Multer.File) {
+    return this.pagesService.create(createPageDto, file);
   }
 
   @Get()
@@ -31,8 +50,14 @@ export class PagesController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  update(@Param('id') id: string, @Body() updatePageDto: UpdatePageDto) {
-    return this.pagesService.update(+id, updatePageDto);
+  @UseInterceptors(
+    FileInterceptor('backgroundImage', {
+      storage: new UploadsService().getFileStorage(),
+      fileFilter: new UploadsService().fileFilter,
+    }),
+  )
+  update(@Param('id') id: string, @Body() updatePageDto: UpdatePageDto, @UploadedFile() file?: Express.Multer.File) {
+    return this.pagesService.update(+id, updatePageDto, file);
   }
 
   @Delete(':id')

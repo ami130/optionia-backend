@@ -5,17 +5,26 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Page } from './entities/page.entity';
 import { IsNull, Not, Repository } from 'typeorm';
 import { slugify } from 'src/common/config/slugify';
+import { UploadsService } from '../uploads/uploads.service';
 
 @Injectable()
 export class PagesService {
-  constructor(@InjectRepository(Page) private readonly pageRepo: Repository<Page>) {}
+  constructor(
+    @InjectRepository(Page) private readonly pageRepo: Repository<Page>,
+    private readonly uploadsService: UploadsService,
+  ) {}
 
-  async create(dto: CreatePageDto) {
+  async create(dto: CreatePageDto, file?: Express.Multer.File) {
     const { children, ...parentData } = dto;
 
     // Ensure slug is generated if not provided
     if (!parentData.slug || parentData.slug.trim() === '') {
       parentData.slug = slugify(parentData.title);
+    }
+
+    // Handle file upload
+    if (file) {
+      parentData.backgroundImage = file.filename;
     }
 
     const page = this.pageRepo.create(parentData);
@@ -45,11 +54,21 @@ export class PagesService {
     return page;
   }
 
-  async update(id: number, dto: UpdatePageDto) {
+  async update(id: number, dto: UpdatePageDto, file?: Express.Multer.File) {
     const page = await this.pageRepo.findOne({ where: { id }, relations: ['children'] });
     if (!page) throw new NotFoundException('Page not found');
 
     const { children, ...parentData } = dto;
+
+    // Handle file upload
+    if (file) {
+      // Remove old file if exists
+      if (page.backgroundImage) {
+        this.uploadsService.removeFileIfExists(page.backgroundImage);
+      }
+      parentData.backgroundImage = file.filename;
+    }
+
     await this.pageRepo.update(id, parentData);
 
     if (children?.length) {

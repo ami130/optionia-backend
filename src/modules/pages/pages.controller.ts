@@ -1,3 +1,4 @@
+// pages.controller.ts
 import {
   Controller,
   Get,
@@ -9,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { PagesService } from './pages.service';
 import { CreatePageDto } from './dto/create-page.dto';
@@ -17,7 +19,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enum/userRole.enum';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { UploadsService } from '../uploads/uploads.service';
 
 @Controller('pages')

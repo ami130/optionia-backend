@@ -33,9 +33,17 @@ export class BlogFilterDto {
   sortOrder?: SortOrder = SortOrder.DESC;
 
   @IsOptional()
+  @IsString()
+  category?: string; // Change from number to string for slug
+
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
-  category?: number;
+  categoryId?: number;
+
+  @IsOptional()
+  @IsString()
+  tagSlugs?: string; // Change from tagIds to tagSlugs
 
   @IsOptional()
   @IsString()
@@ -55,6 +63,6 @@ export class BlogFilterDto {
   featured?: boolean;
 
   @IsOptional()
-  @IsString()
-  status?: string;
+  @Type(() => Boolean)
+  status?: boolean;
 }

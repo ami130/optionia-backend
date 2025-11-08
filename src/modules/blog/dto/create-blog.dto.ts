@@ -1,13 +1,5 @@
 import { Type } from 'class-transformer';
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsNumber,
-  IsArray,
-  IsBoolean,
-  IsEnum,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsArray, IsBoolean, IsEnum } from 'class-validator';
 import { BlogType } from '../enum/blog-type.enum';
 
 export class CreateBlogDto {
@@ -46,16 +38,18 @@ export class CreateBlogDto {
   wordCount?: number;
 
   @IsOptional()
-  @IsBoolean()
-  featured?: boolean;
-
-  @IsOptional()
   @IsEnum(BlogType)
   blogType?: BlogType;
 
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsBoolean()
+  @Type(() => Boolean)
+  featured?: boolean = false; // ✅ Default to false
+
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  status?: boolean = true; // ✅ Default to true (published)
 
   @IsOptional()
   metaData?: any;

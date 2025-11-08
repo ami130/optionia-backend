@@ -34,7 +34,7 @@ export class Blog {
   @Column({ nullable: true })
   thumbnailUrl?: string;
 
- @Column({ type: 'simple-array', nullable: true }) // array of image URLs
+  @Column({ type: 'simple-array', nullable: true }) // array of image URLs
   image?: string[];
 
   @Column({ type: 'jsonb', nullable: true }) // store metaData as JSON in Postgres
@@ -52,8 +52,8 @@ export class Blog {
   @Column({ type: 'enum', enum: BlogType, nullable: true })
   blogType?: BlogType;
 
-  @Column({ nullable: true })
-  status?: string;
+  @Column({ type: 'boolean', default: true, nullable: false })
+  status: boolean;
 
   // ✅ Relations
   @ManyToOne(() => Page, (page) => page.blogs, { eager: true })

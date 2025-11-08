@@ -8,35 +8,35 @@ export const typeOrmConfig: TypeOrmModuleAsyncOptions = {
   useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
     const isProduction = configService.get<string>('NODE_ENV') === 'production';
 
-    // For Render, use DATABASE_URL if available, otherwise fall back to individual vars
+    // ✅ ALWAYS false in production, optional in development
+    const synchronize = configService.get<boolean>('DB_SYNCHRONIZE') || !isProduction;
+
     const databaseUrl = configService.get<string>('DATABASE_URL');
 
     if (databaseUrl) {
-      // Use DATABASE_URL (Render provides this)
       return {
         type: 'postgres',
         url: databaseUrl,
         entities: [__dirname + '/../**/*.entity.{js,ts}'],
-        synchronize: true, // false in production for safety
+        synchronize: synchronize, // ✅ Controlled by environment
         logging: !isProduction,
         logger: new TypeOrmLogger(),
         retryAttempts: 5,
         retryDelay: 3000,
         migrations: ['dist/migrations/*.js'],
         migrationsTableName: 'migrations',
-        ssl: { rejectUnauthorized: false }, // Always use SSL for Render
+        ssl: { rejectUnauthorized: false },
       };
     } else {
-      // Use individual connection parameters (for local development)
       return {
         type: 'postgres',
         host: configService.get<string>('DB_HOST') || 'localhost',
         port: configService.get<number>('DB_PORT') || 5432,
         username: configService.get<string>('DB_USERNAME') || 'postgres',
         password: configService.get<string>('DB_PASSWORD') || 'postgres',
-        database: configService.get<string>('DB_NAME') || configService.get<string>('DB_DATABASE') || 'postgres', // Support both DB_NAME and DB_DATABASE
+        database: configService.get<string>('DB_NAME') || configService.get<string>('DB_DATABASE') || 'postgres',
         entities: [__dirname + '/../**/*.entity.{js,ts}'],
-        synchronize: true,
+        synchronize: synchronize, // ✅ Controlled by environment
         logging: !isProduction,
         logger: new TypeOrmLogger(),
         retryAttempts: 5,

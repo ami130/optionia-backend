@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateBlogDto } from './create-blog.dto';
 import { IsOptional, IsObject, IsBoolean } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class UpdateBlogDto extends PartialType(CreateBlogDto) {
   @IsOptional()
@@ -13,11 +13,19 @@ export class UpdateBlogDto extends PartialType(CreateBlogDto) {
 
   @IsOptional()
   @IsBoolean()
-  @Type(() => Boolean)
+  @Transform(({ value }) => {
+    if (value === 'true' || value === '1' || value === true) return true;
+    if (value === 'false' || value === '0' || value === false) return false;
+    return value;
+  })
   featured?: boolean;
 
   @IsOptional()
   @IsBoolean()
-  @Type(() => Boolean)
+  @Transform(({ value }) => {
+    if (value === 'true' || value === '1' || value === true) return true;
+    if (value === 'false' || value === '0' || value === false) return false;
+    return value;
+  })
   status?: boolean;
 }

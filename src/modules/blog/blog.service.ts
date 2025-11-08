@@ -99,8 +99,8 @@ export class BlogService {
     const blog = this.blogRepo.create({
       ...data,
       slug,
-      featured, // ✅ Use the processed featured value
-      status, // ✅ Use the processed status value
+      featured: data.featured, // Should be boolean now
+      status: data.status,
       page,
       category,
       tags,

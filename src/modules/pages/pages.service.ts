@@ -7,7 +7,6 @@ import { Page } from './entities/page.entity';
 import { IsNull, Repository } from 'typeorm';
 import { slugify } from 'src/common/config/slugify';
 import { UploadsService } from '../uploads/uploads.service';
-import { PageChildUpdateDto } from './types/page-update.interface';
 
 @Injectable()
 export class PagesService {

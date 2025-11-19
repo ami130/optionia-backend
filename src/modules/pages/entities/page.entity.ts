@@ -1,4 +1,4 @@
-// page.entity.ts
+// src/modules/pages/entities/page.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -15,6 +15,8 @@ import {
 } from 'typeorm';
 import { Blog } from '../../blog/entities/blog.entity';
 import { slugify } from 'src/common/config/slugify';
+import { TermsConditions } from 'src/modules/terms-conditions/entities/terms-conditions.entity';
+import { PrivacyPolicy } from 'src/modules/privacy-policy/entities/privacy-policy.entity'; // Correct import
 
 @Entity('pages')
 @Unique(['title'])
@@ -110,6 +112,12 @@ export class Page {
   @OneToMany(() => Blog, (blog) => blog.page, { cascade: true })
   blogs?: Blog[];
 
+  @OneToMany(() => TermsConditions, (term) => term.page, { cascade: true })
+  termsOfService?: TermsConditions[];
+
+  @OneToMany('PrivacyPolicy', (policy: any) => policy.page, { cascade: true })
+  privacyPolicies?: any; // Fixed spelling
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -118,15 +126,12 @@ export class Page {
 
   @BeforeInsert()
   @BeforeUpdate()
-  generateSlug() {
-    if (!this.slug || this.slug.trim() === '') {
+  updateSlugAndUrl() {
+    if (this.title && !this.slug) {
       this.slug = slugify(this.title);
-    } else {
-      this.slug = slugify(this.slug);
     }
-
-    if (!this.slug || this.slug.trim() === '') {
-      this.slug = slugify(this.name || 'page');
+    if (this.slug && !this.url) {
+      this.url = `/${this.slug}`;
     }
   }
 }

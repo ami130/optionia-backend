@@ -1,6 +1,7 @@
+// src/modules/privacy-policy/dto/create-privacy.dto.ts
 import { IsString, IsOptional, IsNotEmpty, MaxLength, IsBoolean } from 'class-validator';
 
-export class CreateTermsDto {
+export class CreatePrivacyDto {
   @IsString()
   @IsNotEmpty({ message: 'Title is required' })
   @MaxLength(255)

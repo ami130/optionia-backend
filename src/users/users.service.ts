@@ -1,4 +1,4 @@
-/* eslint-disable prettier/prettier */
+// src/users/users.service.ts
 import { Injectable, ConflictException, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,7 +6,7 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
 import { Role } from 'src/roles/entities/role.entity';
 import { RolesService } from 'src/roles/roles.service';
-
+import { Blog } from 'src/modules/blog/entities/blog.entity';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as bcrypt from 'bcrypt';
@@ -17,8 +17,9 @@ export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     @InjectRepository(Role) private readonly roleRepo: Repository<Role>,
+    @InjectRepository(Blog) private readonly blogRepo: Repository<Blog>,
     @Inject(forwardRef(() => RolesService))
-    private readonly rolesService: RolesService, // ✅ fixed injection
+    private readonly rolesService: RolesService,
     private readonly uploadsService: UploadsService,
   ) {}
 
@@ -29,7 +30,7 @@ export class UsersService {
   }
 
   async create(createDto: CreateUserDto, file?: Express.Multer.File): Promise<User> {
-    const { email, username, roleId } = createDto;
+    const { email, username, roleId, designation, expertise } = createDto;
 
     if (await this.userRepo.findOne({ where: { email } })) throw new ConflictException('Email already exists');
     if (await this.userRepo.findOne({ where: { username } })) throw new ConflictException('Username already exists');
@@ -42,6 +43,8 @@ export class UsersService {
 
     const user = this.userRepo.create({
       ...createDto,
+      designation,
+      expertise: Array.isArray(expertise) ? expertise : expertise ? [expertise] : [],
       role: role || undefined,
     });
 
@@ -54,11 +57,67 @@ export class UsersService {
     return this.userRepo.findOne({ where: { email }, relations: ['role'] });
   }
 
-  // Add this method to find role with slug
+  // ✅ Find user by username WITH blogs
+  async findByUsername(username: string) {
+    console.log('🔍 Finding user by username:', username);
+
+    const user = await this.userRepo.findOne({
+      where: { username },
+      relations: ['role'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with username "${username}" not found`);
+    }
+
+    // Get user's blogs
+    const blogs = await this.blogRepo.find({
+      where: { createdBy: { id: user.id } },
+      relations: ['category', 'tags', 'authors', 'page'],
+      order: { createdAt: 'DESC' },
+    });
+
+    console.log('📖 Found blogs for user:', blogs.length);
+
+    // Exclude password
+    const { password, ...userWithoutPassword } = user;
+
+    return {
+      ...userWithoutPassword,
+      blogs: blogs.map((blog) => ({
+        id: blog.id,
+        title: blog.title,
+        slug: blog.slug,
+        keyTakeaways: blog.keyTakeaways,
+        thumbnailUrl: blog.thumbnailUrl,
+        readingTime: blog.readingTime,
+        wordCount: blog.wordCount,
+        featured: blog.featured,
+        blogType: blog.blogType,
+        createdAt: blog.createdAt,
+        updatedAt: blog.updatedAt,
+        category: blog.category
+          ? {
+              id: blog.category.id,
+              name: blog.category.name,
+              slug: blog.category.slug,
+            }
+          : null,
+      
+     
+        authors: blog.authors?.map((author) => ({
+          id: author.id,
+          username: author.username,
+          email: author.email,
+          profileImage: author.profileImage,
+        })),
+      })),
+    };
+  }
   async findRoleById(roleId: number) {
     return this.roleRepo.findOne({
       where: { id: roleId },
-      select: ['id', 'name', 'slug'], // Make sure to select slug
+      select: ['id', 'name', 'slug'],
     });
   }
 
@@ -71,21 +130,13 @@ export class UsersService {
       roleModulePermissions = await this.rolesService.getRoleModulesWithPermissions(user.role.id);
     }
 
-    // Exclude password
     const { password, ...userWithoutPassword } = user;
-
     return {
       ...userWithoutPassword,
-      role: user.role
-        ? {
-            ...user.role,
-            roleModulePermissions,
-          }
-        : null,
+      role: user.role ? { ...user.role, roleModulePermissions } : null,
     };
   }
 
-  // Find all users
   async findAll() {
     const users = await this.userRepo.find({ relations: ['role'] });
     return users.map((u) => {
@@ -94,7 +145,6 @@ export class UsersService {
     });
   }
 
-  // Update single user
   async updateUser(
     id: number,
     data: {
@@ -104,6 +154,8 @@ export class UsersService {
       password?: any;
       bio?: string;
       linkedinProfile?: string;
+      designation?: string;
+      expertise?: string[];
     },
     file?: Express.Multer.File,
   ) {
@@ -124,6 +176,10 @@ export class UsersService {
     // ✅ Update optional fields
     if (data.bio !== undefined) user.bio = data.bio;
     if (data.linkedinProfile !== undefined) user.linkedinProfile = data.linkedinProfile;
+    if (data.designation !== undefined) user.designation = data.designation;
+    if (data.expertise !== undefined) {
+      user.expertise = Array.isArray(data.expertise) ? data.expertise : data.expertise ? [data.expertise] : [];
+    }
 
     // ✅ Update profile image
     if (file) {
@@ -145,7 +201,45 @@ export class UsersService {
     return this.userRepo.save(user);
   }
 
-  // ✅ Seed default Admin
+  // ✅ Get user's blogs by user ID
+  async getUserBlogs(userId: number) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const blogs = await this.blogRepo.find({
+      where: { createdBy: { id: userId } },
+      relations: ['category', 'tags', 'authors'],
+      order: { createdAt: 'DESC' },
+    });
+
+    console.log('blogs', blogs, userId);
+
+    return blogs.map((blog) => ({
+      id: blog.id,
+      title: blog.title,
+      slug: blog.slug,
+      subtitle: blog.subtitle,
+      thumbnailUrl: blog.thumbnailUrl,
+      readingTime: blog.readingTime,
+      featured: blog.featured,
+      status: blog.status,
+      createdAt: blog.createdAt,
+      category: blog.category
+        ? {
+            id: blog.category.id,
+            name: blog.category.name,
+            slug: blog.category.slug,
+          }
+        : null,
+      tags: blog.tags?.map((tag) => ({
+        id: tag.id,
+        name: tag.name,
+        slug: tag.slug,
+      })),
+    }));
+  }
+
+
 
   async seedAdmin(adminEmail = 'admin@example.com', adminPassword = 'admin123') {
     const existing = await this.userRepo.findOne({ where: { email: adminEmail } });
@@ -163,7 +257,9 @@ export class UsersService {
     const user = this.userRepo.create({
       username: 'admin',
       email: adminEmail,
-      password: adminPassword, // Plain text - entity hooks will hash it
+      password: adminPassword,
+      designation: 'System Administrator',
+      expertise: ['System Management', 'User Administration'],
       role: adminRole,
     });
 

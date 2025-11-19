@@ -6,14 +6,15 @@ import { User } from './entities/user.entity';
 import { Role } from 'src/roles/entities/role.entity';
 import { RolesModule } from 'src/roles/roles.module';
 import { RoleModulePermission } from 'src/roles/entities/role-module-permission/role-module-permission.entity';
+import { Blog } from 'src/modules/blog/entities/blog.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Role, RoleModulePermission]),
+    TypeOrmModule.forFeature([User, Role, Blog, RoleModulePermission]),
     forwardRef(() => RolesModule), // 🔹 forwardRef solves circular dependency
   ],
   providers: [UsersService],
   controllers: [UsersController],
-  exports: [UsersService],
+  exports: [UsersService, TypeOrmModule],
 })
 export class UsersModule {}

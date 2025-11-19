@@ -1,6 +1,62 @@
 import { Transform, Type } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsArray, IsBoolean, IsEnum } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsObject,
+  ValidateNested,
+  IsUrl,
+} from 'class-validator';
 import { BlogType } from '../enum/blog-type.enum';
+
+class PromotionalDataDto {
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  keywords?: string[];
+
+  @IsOptional()
+  @IsUrl()
+  promotional_url?: string;
+
+  @IsOptional()
+  @IsString()
+  image?: string;
+}
+
+class FAQItemDto {
+  @IsNotEmpty()
+  @IsString()
+  id: string;
+
+  @IsNotEmpty()
+  @IsString()
+  question: string;
+
+  @IsNotEmpty()
+  @IsString()
+  answer: string;
+}
+
+class FAQDataDto {
+  @IsOptional()
+  @IsString()
+  faqTitle?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => FAQItemDto)
+  items?: FAQItemDto[];
+}
 
 export class CreateBlogDto {
   @IsNotEmpty()
@@ -21,11 +77,28 @@ export class CreateBlogDto {
 
   @IsOptional()
   @IsString()
+  keyTakeaways?: string;
+
+  @IsOptional()
+  @IsString()
   thumbnailUrl?: string;
 
   @IsOptional()
   @IsArray()
+  @IsString({ each: true })
   image?: string[];
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => PromotionalDataDto)
+  promotionalData?: PromotionalDataDto;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => FAQDataDto)
+  faqData?: FAQDataDto;
 
   @IsOptional()
   @IsNumber()
@@ -74,9 +147,11 @@ export class CreateBlogDto {
 
   @IsOptional()
   @IsArray()
+  @IsNumber({}, { each: true })
   authorIds?: number[];
 
   @IsOptional()
   @IsArray()
+  @IsNumber({}, { each: true })
   tagIds?: number[];
 }

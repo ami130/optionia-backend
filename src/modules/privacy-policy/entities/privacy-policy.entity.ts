@@ -1,8 +1,9 @@
+// src/modules/privacy-policy/entities/privacy-policy.entity.ts
 import { Page } from 'src/modules/pages/entities/page.entity';
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 
-@Entity('terms_conditions')
-export class TermsConditions {
+@Entity('privacy_policy')
+export class PrivacyPolicy {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -27,7 +28,7 @@ export class TermsConditions {
   @Column({ default: true })
   isActive: boolean;
 
-  @ManyToOne(() => Page, (page) => page.termsOfService, { eager: true })
+  @ManyToOne(() => Page, (page) => page.privacyPolicies, { eager: true })
   page: Page;
 
   @CreateDateColumn()

@@ -1,3 +1,4 @@
+// src/users/entities/user.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -9,10 +10,12 @@ import {
   UpdateDateColumn,
   Unique,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
 import { Role } from 'src/roles/entities/role.entity';
+import { Blog } from 'src/modules/blog/entities/blog.entity';
 
 @Entity('users')
 @Unique(['email'])
@@ -34,6 +37,12 @@ export class User {
   @Column({ nullable: true })
   profileImage?: string;
 
+  @Column({ nullable: true })
+  designation?: string;
+
+  @Column({ type: 'simple-array', nullable: true })
+  expertise?: string[];
+
   @ManyToOne(() => Role, { eager: true })
   @JoinColumn({ name: 'role_id' })
   role: Role;
@@ -44,6 +53,9 @@ export class User {
   @Column({ nullable: true })
   linkedinProfile?: string;
 
+  @OneToMany(() => Blog, (blog) => blog.createdBy)
+  blogs: Blog[];
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -53,30 +65,15 @@ export class User {
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword() {
-    console.log('🔐 Entity - hashPassword called');
-    console.log('🔐 Password before hash:', this.password?.substring(0, 10) + '...');
-
-    // Only hash if password is modified and not already hashed
     if (this.password && !this.password.startsWith('$2b$')) {
       const saltRounds = 10;
       this.password = await bcrypt.hash(this.password, saltRounds);
-      console.log('🔐 Password after hash:', this.password.substring(0, 20) + '...');
-    } else {
-      console.log('🔐 Password already hashed or empty');
     }
   }
 
   async comparePassword(attempt: string): Promise<boolean> {
-    if (!attempt || !this.password) {
-      return false;
-    }
-
-    try {
-      return await bcrypt.compare(attempt, this.password);
-    } catch (error) {
-      console.error('Password comparison error:', error);
-      return false;
-    }
+    if (!attempt || !this.password) return false;
+    return await bcrypt.compare(attempt, this.password);
   }
 }
 

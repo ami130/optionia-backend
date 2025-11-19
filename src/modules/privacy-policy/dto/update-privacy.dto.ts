@@ -1,8 +1,9 @@
+// src/modules/privacy-policy/dto/update-privacy.dto.ts
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateTermsDto } from './create-terms.dto';
+import { CreatePrivacyDto } from './create-privacy.dto';
 import { IsOptional, IsBoolean } from 'class-validator';
 
-export class UpdateTermsDto extends PartialType(CreateTermsDto) {
+export class UpdatePrivacyDto extends PartialType(CreatePrivacyDto) {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;

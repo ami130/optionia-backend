@@ -16,26 +16,26 @@ export class UsersController {
     private readonly uploadsService: UploadsService,
   ) {}
 
-  // ✅ Get current user - FIXED VERSION
+  // ✅ Get current user
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async me(@Req() req: any) {
-    console.log('👤 users/me - Request user:', req.user);
-    console.log('👤 users/me - User ID from token:', req.user.id);
+    console.log('👤 users/me - User ID:', req.user.id);
+    const user = await this.usersService.findById(req.user.id);
+    if (!user) throw new Error('User not found');
+    return user;
+  }
 
-    try {
-      const user = await this.usersService.findById(req.user.id);
-      if (!user) {
-        console.log('❌ User not found with ID:', req.user.sub);
-        throw new Error('User not found');
-      }
+  // ✅ Get user by username (like omi-hasan)
+  @Get('username/:username')
+  async findByUsername(@Param('username') username: string) {
+    return this.usersService.findByUsername(username);
+  }
 
-      console.log('✅ users/me - User found:', user.email);
-      return user;
-    } catch (error) {
-      console.error('❌ users/me - Error:', error);
-      throw error;
-    }
+  // ✅ Get blogs by user ID
+  @Get(':id/blogs')
+  async getUserBlogs(@Param('id') id: number) {
+    return this.usersService.getUserBlogs(id);
   }
 
   // Assign role to user

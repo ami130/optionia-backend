@@ -98,6 +98,30 @@ export class PageSeederService {
           metaDescription: 'Contact our team for any inquiries',
         },
       },
+      {
+        name: 'Terms of Service',
+        title: 'Terms of Service - Optionia',
+        description: 'Get in touch with us',
+        slug: 'terms-of-service',
+        url: '/terms-of-service',
+        isActive: true,
+        metaData: {
+          metaTitle: 'Terms of Service Us - Optionia',
+          metaDescription: 'Terms of Service our team for any inquiries',
+        },
+      },
+      {
+        name: 'Privacy Policy',
+        title: 'Privacy Policy - Optionia',
+        description: 'Get in touch with us',
+        slug: 'privacy-policy',
+        url: '/privacy-policy',
+        isActive: true,
+        metaData: {
+          metaTitle: 'Privacy Policy Us - Optionia',
+          metaDescription: 'Privacy Policy our team for any inquiries',
+        },
+      },
     ];
 
     try {

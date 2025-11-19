@@ -31,14 +31,37 @@ export class Blog {
   @Column({ type: 'text' })
   content: string;
 
+  @Column({ type: 'text', nullable: true })
+  keyTakeaways?: string;
+
   @Column({ nullable: true })
   thumbnailUrl?: string;
 
-  @Column({ type: 'simple-array', nullable: true }) // array of image URLs
+  @Column({ type: 'simple-array', nullable: true })
   image?: string[];
 
-  @Column({ type: 'jsonb', nullable: true }) // store metaData as JSON in Postgres
+  @Column({ type: 'jsonb', nullable: true })
   metaData?: any;
+
+  // Promotional Data
+  @Column({ type: 'jsonb', nullable: true })
+  promotionalData?: {
+    title: string;
+    keywords: string[];
+    promotional_url: string;
+    image?: string;
+  };
+
+  // FAQ Data
+  @Column({ type: 'jsonb', nullable: true })
+  faqData?: {
+    faqTitle: string;
+    items: Array<{
+      id: string;
+      question: string;
+      answer: string;
+    }>;
+  };
 
   @Column({ type: 'int', nullable: true })
   readingTime?: number;
@@ -55,7 +78,6 @@ export class Blog {
   @Column({ type: 'boolean', default: true, nullable: false })
   status: boolean;
 
-  // ✅ Relations
   @ManyToOne(() => Page, (page) => page.blogs, { eager: true })
   page: Page;
 

@@ -53,10 +53,17 @@ export class BlogController {
     AnyFilesInterceptor({
       storage: new UploadsService().getFileStorage(),
       fileFilter: new UploadsService().fileFilter,
-      limits: { files: 6 },
+      limits: { files: 10 }, // Increased limit for promotional images
     }),
   )
   async create(@UploadedFiles() files: Express.Multer.File[], @Body() dto: any, @Req() req: any) {
+    console.log('📨 Received blog creation request');
+    console.log('📊 Form data:', dto);
+    console.log(
+      '📁 Files received:',
+      files?.map((f) => ({ fieldname: f.fieldname, originalname: f.originalname })),
+    );
+
     // ✅ Ensure required IDs
     if (!dto.pageId) throw new BadRequestException('pageId is required');
     if (!dto.categoryId) throw new BadRequestException('categoryId is required');
@@ -74,6 +81,23 @@ export class BlogController {
       dto.tagIds = dto.tagIds.map((id: any) => +id);
     }
 
+    // ✅ Handle promotional_content and faqData if they are strings
+    if (dto.promotional_content && typeof dto.promotional_content === 'string') {
+      try {
+        dto.promotionalData = JSON.parse(dto.promotional_content);
+      } catch (error) {
+        console.warn('Failed to parse promotional_content:', error);
+      }
+    }
+
+    if (dto.faqData && typeof dto.faqData === 'string') {
+      try {
+        dto.faqData = JSON.parse(dto.faqData);
+      } catch (error) {
+        console.warn('Failed to parse faqData:', error);
+      }
+    }
+
     // ✅ Pass files to service instead of handling in controller
     return this.service.create(dto, req.user, files);
   }
@@ -85,16 +109,23 @@ export class BlogController {
     AnyFilesInterceptor({
       storage: new UploadsService().getFileStorage(),
       fileFilter: new UploadsService().fileFilter,
-      limits: { files: 6 },
+      limits: { files: 10 }, // Increased limit for promotional images
     }),
   )
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: any, // Use any to handle mixed data
+    @Body() dto: any,
     @Req() req: any,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    let updateData: UpdateBlogDto = {};
+    console.log('🔄 Received blog update request for ID:', id);
+    console.log('📊 Update data:', dto);
+    console.log(
+      '📁 Files received:',
+      files?.map((f) => ({ fieldname: f.fieldname, originalname: f.originalname })),
+    );
+
+    let updateData: any = {}; // Use any to avoid TypeScript errors
     let imageIndexMap: Record<string, number> = {};
 
     try {
@@ -123,6 +154,24 @@ export class BlogController {
         }
       }
 
+      // Handle promotional_content and faqData if they are strings
+      if (updateData.promotional_content && typeof updateData.promotional_content === 'string') {
+        try {
+          updateData.promotionalData = JSON.parse(updateData.promotional_content);
+          delete updateData.promotional_content;
+        } catch (error) {
+          console.warn('Failed to parse promotional_content:', error);
+        }
+      }
+
+      if (updateData.faqData && typeof updateData.faqData === 'string') {
+        try {
+          updateData.faqData = JSON.parse(updateData.faqData);
+        } catch (error) {
+          console.warn('Failed to parse faqData:', error);
+        }
+      }
+
       // Ensure arrays are properly formatted
       if (updateData.authorIds && !Array.isArray(updateData.authorIds)) {
         updateData.authorIds = [updateData.authorIds];
@@ -132,6 +181,7 @@ export class BlogController {
         updateData.tagIds = [updateData.tagIds];
       }
     } catch (error) {
+      console.error('❌ Error parsing update data:', error);
       throw new BadRequestException('Invalid data format');
     }
 

@@ -1,5 +1,5 @@
 import { Page } from 'src/modules/pages/entities/page.entity';
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 
 @Entity('terms_conditions')
 export class TermsConditions {
@@ -28,6 +28,7 @@ export class TermsConditions {
   isActive: boolean;
 
   @ManyToOne(() => Page, (page) => page.termsOfService, { eager: true })
+  @JoinColumn({ name: 'pageId' }) // Explicit column name
   page: Page;
 
   @CreateDateColumn()

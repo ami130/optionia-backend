@@ -1,6 +1,14 @@
 // src/modules/privacy-policy/entities/privacy-policy.entity.ts
 import { Page } from 'src/modules/pages/entities/page.entity';
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 
 @Entity('privacy_policy')
 export class PrivacyPolicy {
@@ -29,6 +37,7 @@ export class PrivacyPolicy {
   isActive: boolean;
 
   @ManyToOne(() => Page, (page) => page.privacyPolicies, { eager: true })
+  @JoinColumn({ name: 'pageId' })
   page: Page;
 
   @CreateDateColumn()

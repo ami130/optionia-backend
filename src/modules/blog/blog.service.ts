@@ -9,11 +9,11 @@ import { Page } from '../pages/entities/page.entity';
 import { Category } from '../categories/entities/category.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Tag } from '../tag/entities/tag.entity';
-import { slugify } from 'src/common/config/slugify';
 import { UploadsService } from '../uploads/uploads.service';
 import { PaginationService } from 'src/common/services/pagination.service';
 import { PaginatedResponse } from 'src/common/interfaces/pagination.interface';
 import { BlogFilterDto } from './dto/blog-query.dto';
+import { slugify } from 'src/common/config/slugify';
 
 @Injectable()
 export class BlogService {
@@ -28,73 +28,213 @@ export class BlogService {
   ) {}
 
   // ✅ CREATE BLOG
+  // async create(data: CreateBlogDto, user?: User, files?: Express.Multer.File[]) {
+  //   console.log('=== DEBUG START ===');
+  //   console.log('📝 Original data:', data);
+  //   console.log('🎯 Featured value:', data.featured);
+  //   console.log('🎯 Status value:', data.status);
+
+  //   // ✅ Handle uploaded files using the existing UploadsService
+  //   const uploadedFiles: any = {};
+  //   // ✅ Handle file uploads with imageIndexMap for specific image replacement
+  //   if (files?.length) {
+  //     const allowedFields = ['thumbnail', 'image', 'promotional_image'];
+  //     const fileData: any = {};
+
+  //     this.uploadsService.mapFilesToData(files, fileData, allowedFields);
+
+  //     // Apply the file changes to the blog entity
+  //     if (fileData['thumbnail']) {
+  //       data.thumbnailUrl = fileData['thumbnail'];
+  //     }
+
+  //     if (fileData['image']) {
+  //       data.image = Array.isArray(fileData['image']) ? fileData['image'] : [fileData['image']];
+  //     }
+
+  //     // Handle promotional image
+  //     if (fileData['promotional_image']) {
+  //       if (!data.promotionalData) {
+  //         data.promotionalData = data.promotionalData || {
+  //           title: '',
+  //           keywords: [],
+  //           promotional_url: '',
+  //           image: fileData['promotional_image'],
+  //         };
+  //       } else {
+  //         data.promotionalData.image = fileData['promotional_image'];
+  //       }
+  //     }
+  //   }
+
+  //   // ✅ Handle promotional_content from form data
+  //   if ((data as any).promotional_content) {
+  //     try {
+  //       const promotionalContent = JSON.parse((data as any).promotional_content);
+  //       data.promotionalData = {
+  //         ...data.promotionalData,
+  //         ...promotionalContent,
+  //         // If we have uploaded promotional image, add it here
+  //         ...(uploadedFiles.promotional_image && { image: uploadedFiles.promotional_image }),
+  //       };
+  //     } catch (error) {
+  //       console.warn('Failed to parse promotional_content:', error);
+  //     }
+  //   }
+
+  //   // ✅ Handle faqData from form data
+  //   if ((data as any).faqData) {
+  //     try {
+  //       const faqData = JSON.parse((data as any).faqData);
+  //       data.faqData = faqData;
+  //     } catch (error) {
+  //       console.warn('Failed to parse faqData:', error);
+  //     }
+  //   }
+
+  //   // ✅ Set defaults if not provided
+  //   const featured = data.featured === true || ['true', '1'].includes(String(data.featured));
+  //   const status = data.status === true || ['true', '1', 'published'].includes(String(data.status));
+
+  //   console.log('🎯 Final values - Featured:', featured, 'Status:', status);
+  //   console.log('📊 Promotional Data:', data.promotionalData);
+  //   console.log('❓ FAQ Data:', data.faqData);
+
+  //   // ✅ Check if page exists
+  //   const page = await this.pageRepo.findOne({ where: { id: data.pageId } });
+  //   if (!page) throw new NotFoundException(`Page with ID ${data.pageId} not found`);
+
+  //   // ✅ Check if category exists
+  //   const category = await this.categoryRepo.findOne({ where: { id: data.categoryId } });
+  //   if (!category) throw new NotFoundException(`Category with ID ${data.categoryId} not found`);
+
+  //   // ✅ Check if tags exist
+  //   let tags: Tag[] = [];
+  //   if (data.tagIds?.length) {
+  //     tags = await this.tagRepo.find({ where: { id: In(data.tagIds) } });
+  //     const foundTagIds = tags.map((t) => t.id);
+  //     const invalidTagIds = data.tagIds.filter((id) => !foundTagIds.includes(id));
+  //     if (invalidTagIds.length) {
+  //       throw new NotFoundException(`Tags not found with IDs: ${invalidTagIds.join(', ')}`);
+  //     }
+  //   }
+
+  //   // ✅ Check if authors exist
+  //   let authors: User[] = [];
+  //   if (data.authorIds?.length) {
+  //     authors = await this.userRepo.find({ where: { id: In(data.authorIds) } });
+  //     const foundAuthorIds = authors.map((a) => a.id);
+  //     const invalidAuthorIds = data.authorIds.filter((id) => !foundAuthorIds.includes(id));
+  //     if (invalidAuthorIds.length) {
+  //       throw new NotFoundException(`Authors not found with IDs: ${invalidAuthorIds.join(', ')}`);
+  //     }
+  //   }
+
+  //   // ✅ Generate slug
+  //   const slug = data?.slug ? data?.slug : slugify(data.title) || data.slug?.trim();
+
+  //   // ✅ Check for duplicate slug
+  //   const existingBlog = await this.blogRepo.findOne({ where: { slug } });
+  //   if (existingBlog) throw new ConflictException(`A blog with slug "${slug}" already exists`);
+
+  //   // ✅ Create blog entity with file URLs and proper boolean values
+  //   const blog = this.blogRepo.create({
+  //     ...data,
+  //     slug,
+  //     featured: featured, // Use the fixed boolean
+  //     status: status,
+  //     page,
+  //     category,
+  //     tags,
+  //     authors,
+  //     createdBy: user,
+  //     // Ensure promotionalData and faqData are properly set
+  //     promotionalData: data.promotionalData,
+  //     faqData: data.faqData,
+  //   });
+
+  //   // ✅ Save blog
+  //   const savedBlog = await this.blogRepo.save(blog);
+  //   console.log('💾 Saved blog - Featured:', savedBlog.featured, 'Status:', savedBlog.status);
+  //   console.log('💾 Saved promotionalData:', savedBlog.promotionalData);
+  //   console.log('💾 Saved faqData:', savedBlog.faqData);
+
+  //   return this.transformBlogResponse(savedBlog);
+  // }
+
+  // ✅ CREATE BLOG
   async create(data: CreateBlogDto, user?: User, files?: Express.Multer.File[]) {
     console.log('=== DEBUG START ===');
     console.log('📝 Original data:', data);
-    console.log('🎯 Featured value:', data.featured);
-    console.log('🎯 Status value:', data.status);
+    console.log(
+      '📁 Files received:',
+      files?.map((f) => ({ fieldname: f.fieldname, originalname: f.originalname })),
+    );
 
-    // ✅ Handle uploaded files using the existing UploadsService
-    const uploadedFiles: any = {};
-    // ✅ Handle file uploads with imageIndexMap for specific image replacement
+    // ✅ Fix boolean parsing
+    const featured = data.featured === true || ['true', '1'].includes(String(data.featured));
+    const status = data.status === true || ['true', '1', 'published'].includes(String(data.status));
+
+    // ✅ Handle uploaded files
     if (files?.length) {
       const allowedFields = ['thumbnail', 'image', 'promotional_image'];
       const fileData: any = {};
 
       this.uploadsService.mapFilesToData(files, fileData, allowedFields);
 
-      // Apply the file changes to the blog entity
+      console.log('📁 Processed files:', fileData);
+
+      // Apply file changes
       if (fileData['thumbnail']) {
         data.thumbnailUrl = fileData['thumbnail'];
+        console.log('✅ Thumbnail set to:', data.thumbnailUrl);
       }
 
       if (fileData['image']) {
         data.image = Array.isArray(fileData['image']) ? fileData['image'] : [fileData['image']];
+        console.log('✅ Images set to:', data.image);
       }
 
-      // Handle promotional image
+      // Handle promotional image - FIXED
       if (fileData['promotional_image']) {
+        console.log('✅ Promotional image found:', fileData['promotional_image']);
         if (!data.promotionalData) {
-          data.promotionalData = data.promotionalData || {
+          data.promotionalData = {
             title: '',
             keywords: [],
             promotional_url: '',
             image: fileData['promotional_image'],
           };
         } else {
-          data.promotionalData.image = fileData['promotional_image'];
+          data.promotionalData = {
+            ...data.promotionalData,
+            image: fileData['promotional_image'],
+          };
         }
       }
     }
 
-    // ✅ Handle promotional_content from form data
-    if ((data as any).promotional_content) {
+    // ✅ Handle promotionalData JSON
+    if (data.promotionalData && typeof data.promotionalData === 'string') {
       try {
-        const promotionalContent = JSON.parse((data as any).promotional_content);
+        const promotionalContent = JSON.parse(data.promotionalData);
         data.promotionalData = {
-          ...data.promotionalData,
+          ...(data.promotionalData && typeof data.promotionalData === 'object' ? data.promotionalData : {}),
           ...promotionalContent,
-          // If we have uploaded promotional image, add it here
-          ...(uploadedFiles.promotional_image && { image: uploadedFiles.promotional_image }),
         };
       } catch (error) {
-        console.warn('Failed to parse promotional_content:', error);
+        console.warn('Failed to parse promotionalData:', error);
       }
     }
 
-    // ✅ Handle faqData from form data
-    if ((data as any).faqData) {
+    // ✅ Handle faqData JSON
+    if (data.faqData && typeof data.faqData === 'string') {
       try {
-        const faqData = JSON.parse((data as any).faqData);
-        data.faqData = faqData;
+        data.faqData = JSON.parse(data.faqData);
       } catch (error) {
         console.warn('Failed to parse faqData:', error);
       }
     }
-
-    // ✅ Set defaults if not provided
-    const featured = data.featured !== undefined ? data.featured : false;
-    const status = data.status !== undefined ? data.status : true;
 
     console.log('🎯 Final values - Featured:', featured, 'Status:', status);
     console.log('📊 Promotional Data:', data.promotionalData);
@@ -131,7 +271,7 @@ export class BlogService {
     }
 
     // ✅ Generate slug
-    const slug = slugify(data.title) || data.slug?.trim();
+    const slug = data?.slug ? data?.slug : slugify(data.title) || data.slug?.trim();
 
     // ✅ Check for duplicate slug
     const existingBlog = await this.blogRepo.findOne({ where: { slug } });
@@ -141,14 +281,13 @@ export class BlogService {
     const blog = this.blogRepo.create({
       ...data,
       slug,
-      featured: data.featured,
-      status: data.status,
+      featured: featured,
+      status: status,
       page,
       category,
       tags,
       authors,
       createdBy: user,
-      // Ensure promotionalData and faqData are properly set
       promotionalData: data.promotionalData,
       faqData: data.faqData,
     });
@@ -272,29 +411,36 @@ export class BlogService {
     if (!blog) throw new NotFoundException('Blog not found');
 
     console.log('🔄 Update data received:', data);
+    console.log(
+      '📁 Files received:',
+      files?.map((f) => ({ fieldname: f.fieldname, originalname: f.originalname })),
+    );
     console.log('📝 Current blog - Featured:', blog.featured, 'Status:', blog.status);
 
     // ✅ Handle uploaded files for update
-    const uploadedFiles: any = {};
-    // ✅ Handle uploaded files using the existing UploadsService
     if (files?.length) {
       const allowedFields = ['thumbnail', 'image', 'promotional_image'];
       const fileData: any = {};
 
       this.uploadsService.mapFilesToData(files, fileData, allowedFields);
 
+      console.log('📁 Processed files:', fileData);
+
       // Convert field names to match your entity
       if (fileData['thumbnail']) {
         data.thumbnailUrl = fileData['thumbnail'];
+        console.log('✅ Thumbnail set to:', data.thumbnailUrl);
       }
 
       // Handle multiple images
       if (fileData['image']) {
         data.image = Array.isArray(fileData['image']) ? fileData['image'] : [fileData['image']];
+        console.log('✅ Images set to:', data.image);
       }
 
       // Handle promotional image - store the file path directly
       if (fileData['promotional_image']) {
+        console.log('✅ Promotional image found:', fileData['promotional_image']);
         // If promotionalData doesn't exist, create it
         if (!data.promotionalData) {
           data.promotionalData = {
@@ -305,32 +451,32 @@ export class BlogService {
           };
         } else {
           // If promotionalData exists, just add the image
-          data.promotionalData.image = fileData['promotional_image'];
+          data.promotionalData = {
+            ...data.promotionalData,
+            image: fileData['promotional_image'],
+          };
         }
       }
     }
 
-    // ✅ Handle promotional_content from form data for update
-    if ((data as any).promotional_content) {
+    // ✅ Handle promotionalData JSON for update
+    if (data.promotionalData && typeof data.promotionalData === 'string') {
       try {
-        const promotionalContent = JSON.parse((data as any).promotional_content);
+        const promotionalContent = JSON.parse(data.promotionalData);
         data.promotionalData = {
           ...blog.promotionalData,
-          ...data.promotionalData,
+          ...(data.promotionalData && typeof data.promotionalData === 'object' ? data.promotionalData : {}),
           ...promotionalContent,
-          // Preserve existing image if new one not uploaded
-          ...(uploadedFiles.promotional_image ? { image: uploadedFiles.promotional_image } : {}),
         };
       } catch (error) {
-        console.warn('Failed to parse promotional_content:', error);
+        console.warn('Failed to parse promotionalData:', error);
       }
     }
 
-    // ✅ Handle faqData from form data for update
-    if ((data as any).faqData) {
+    // ✅ Handle faqData JSON for update
+    if (data.faqData && typeof data.faqData === 'string') {
       try {
-        const faqData = JSON.parse((data as any).faqData);
-        data.faqData = faqData;
+        data.faqData = JSON.parse(data.faqData);
       } catch (error) {
         console.warn('Failed to parse faqData:', error);
       }
@@ -338,13 +484,13 @@ export class BlogService {
 
     // ✅ Handle boolean fields properly
     if (data.featured !== undefined) {
-      blog.featured = data.featured;
-      console.log('✅ Updated featured to:', data.featured);
+      blog.featured = data.featured === true || ['true', '1'].includes(String(data.featured));
+      console.log('✅ Updated featured to:', blog.featured);
     }
 
     if (data.status !== undefined) {
-      blog.status = data.status;
-      console.log('✅ Updated status to:', data.status);
+      blog.status = data.status === true || ['true', '1', 'published'].includes(String(data.status));
+      console.log('✅ Updated status to:', blog.status);
     }
 
     // ✅ Handle page update
@@ -458,6 +604,208 @@ export class BlogService {
 
     return this.transformBlogResponse(updatedBlog);
   }
+
+  // ✅ UPDATE BLOG
+  // async update(
+  //   id: number,
+  //   data: UpdateBlogDto,
+  //   files?: Express.Multer.File[],
+  //   imageIndexMap?: Record<string, number>,
+  //   user?: User,
+  // ) {
+  //   const blog = await this.blogRepo.findOne({
+  //     where: { id },
+  //     relations: ['authors', 'tags', 'category', 'page', 'createdBy'],
+  //   });
+  //   if (!blog) throw new NotFoundException('Blog not found');
+
+  //   console.log('🔄 Update data received:', data);
+  //   console.log('📝 Current blog - Featured:', blog.featured, 'Status:', blog.status);
+
+  //   // ✅ Handle uploaded files for update
+  //   const uploadedFiles: any = {};
+  //   // ✅ Handle uploaded files using the existing UploadsService
+  //   if (files?.length) {
+  //     const allowedFields = ['thumbnail', 'image', 'promotional_image'];
+  //     const fileData: any = {};
+
+  //     this.uploadsService.mapFilesToData(files, fileData, allowedFields);
+
+  //     // Convert field names to match your entity
+  //     if (fileData['thumbnail']) {
+  //       data.thumbnailUrl = fileData['thumbnail'];
+  //     }
+
+  //     // Handle multiple images
+  //     if (fileData['image']) {
+  //       data.image = Array.isArray(fileData['image']) ? fileData['image'] : [fileData['image']];
+  //     }
+
+  //     // Handle promotional image - store the file path directly
+  //     if (fileData['promotional_image']) {
+  //       // If promotionalData doesn't exist, create it
+  //       if (!data.promotionalData) {
+  //         data.promotionalData = {
+  //           title: '',
+  //           keywords: [],
+  //           promotional_url: '',
+  //           image: fileData['promotional_image'],
+  //         };
+  //       } else {
+  //         // If promotionalData exists, just add the image
+  //         data.promotionalData.image = fileData['promotional_image'];
+  //       }
+  //     }
+  //   }
+
+  //   // ✅ Handle promotional_content from form data for update
+  //   if ((data as any).promotional_content) {
+  //     try {
+  //       const promotionalContent = JSON.parse((data as any).promotional_content);
+  //       data.promotionalData = {
+  //         ...blog.promotionalData,
+  //         ...data.promotionalData,
+  //         ...promotionalContent,
+  //         // Preserve existing image if new one not uploaded
+  //         ...(uploadedFiles.promotional_image ? { image: uploadedFiles.promotional_image } : {}),
+  //       };
+  //     } catch (error) {
+  //       console.warn('Failed to parse promotional_content:', error);
+  //     }
+  //   }
+
+  //   // ✅ Handle faqData from form data for update
+  //   if ((data as any).faqData) {
+  //     try {
+  //       const faqData = JSON.parse((data as any).faqData);
+  //       data.faqData = faqData;
+  //     } catch (error) {
+  //       console.warn('Failed to parse faqData:', error);
+  //     }
+  //   }
+
+  //   // ✅ Handle boolean fields properly
+  //   if (data.featured !== undefined) {
+  //     blog.featured = data.featured;
+  //     console.log('✅ Updated featured to:', data.featured);
+  //   }
+
+  //   if (data.status !== undefined) {
+  //     blog.status = data.status;
+  //     console.log('✅ Updated status to:', data.status);
+  //   }
+
+  //   // ✅ Handle page update
+  //   if (data.pageId) {
+  //     const page = await this.pageRepo.findOne({ where: { id: data.pageId } });
+  //     if (!page) throw new NotFoundException('Page not found');
+  //     blog.page = page;
+  //   }
+
+  //   // ✅ Handle category update
+  //   if (data.categoryId) {
+  //     const category = await this.categoryRepo.findOne({ where: { id: data.categoryId } });
+  //     if (!category) throw new NotFoundException('Category not found');
+  //     blog.category = category;
+  //   }
+
+  //   // ✅ Handle authors update
+  //   if (data.authorIds?.length) {
+  //     const authors = await this.userRepo.find({ where: { id: In(data.authorIds) } });
+  //     if (authors.length !== data.authorIds.length) {
+  //       throw new BadRequestException('Some authorIds are invalid');
+  //     }
+  //     blog.authors = authors;
+  //   }
+
+  //   // ✅ Handle tags update
+  //   if (data.tagIds?.length) {
+  //     const tags = await this.tagRepo.find({ where: { id: In(data.tagIds) } });
+  //     if (tags.length !== data.tagIds.length) {
+  //       throw new BadRequestException('Some tagIds are invalid');
+  //     }
+  //     blog.tags = tags;
+  //   }
+
+  //   // ✅ Handle file uploads with imageIndexMap for specific image replacement
+  //   if (files?.length) {
+  //     // Prepare the existing data structure for mapFilesToData
+  //     const existingData = {
+  //       thumbnailUrl: blog.thumbnailUrl,
+  //       image: blog.image || [],
+  //     };
+
+  //     // Use the UploadsService to handle file mapping with index replacement
+  //     this.uploadsService.mapFilesToData(files, data as any, ['thumbnailUrl', 'image'], existingData, {
+  //       arrayIndex: imageIndexMap,
+  //     });
+
+  //     // Apply the file changes to the blog entity
+  //     if (data.thumbnailUrl !== undefined) {
+  //       blog.thumbnailUrl = data.thumbnailUrl;
+  //     }
+
+  //     if (data.image !== undefined) {
+  //       blog.image = data.image;
+  //     }
+  //   }
+
+  //   // ✅ Handle slug update if title changed
+  //   if (data.title && data.title !== blog.title) {
+  //     blog.slug = data.slug || slugify(data.title);
+  //   }
+
+  //   // ✅ Update other fields including new ones
+  //   if (data.keyTakeaways !== undefined) blog.keyTakeaways = data.keyTakeaways;
+  //   if (data.promotionalData !== undefined) {
+  //     // Ensure promotionalData has all required fields and correct types before assignment
+  //     blog.promotionalData = {
+  //       title: data.promotionalData.title ?? '',
+  //       keywords: Array.isArray(data.promotionalData.keywords)
+  //         ? data.promotionalData.keywords
+  //         : data.promotionalData.keywords
+  //           ? [data.promotionalData.keywords]
+  //           : [],
+  //       promotional_url: data.promotionalData.promotional_url ?? '',
+  //       ...(data.promotionalData.image ? { image: data.promotionalData.image } : {}),
+  //     };
+  //   }
+  //   if (data.faqData !== undefined) {
+  //     // Normalize FAQ data to satisfy required fields and types
+  //     const rawFaq: any = data.faqData || {};
+  //     const items = Array.isArray(rawFaq.items)
+  //       ? rawFaq.items.map((it: any) => ({
+  //           id: it?.id !== undefined ? String(it.id) : `${Date.now()}_${Math.random().toString().slice(2)}`,
+  //           question: it?.question ?? '',
+  //           answer: it?.answer ?? '',
+  //         }))
+  //       : [];
+
+  //     blog.faqData = {
+  //       faqTitle: rawFaq.faqTitle ?? '',
+  //       items,
+  //     };
+  //   }
+  //   if (data.readingTime !== undefined) blog.readingTime = data.readingTime;
+  //   if (data.wordCount !== undefined) blog.wordCount = data.wordCount;
+  //   if (data.blogType !== undefined) blog.blogType = data.blogType;
+  //   if (data.metaData !== undefined) blog.metaData = data.metaData;
+  //   if (data.subtitle !== undefined) blog.subtitle = data.subtitle;
+  //   if (data.content !== undefined) blog.content = data.content;
+
+  //   // ✅ Update createdBy if user provided
+  //   if (user) {
+  //     blog.createdBy = user;
+  //   }
+
+  //   // ✅ Save updated blog
+  //   const updatedBlog = await this.blogRepo.save(blog);
+  //   console.log('💾 After update - Featured:', updatedBlog.featured, 'Status:', updatedBlog.status);
+  //   console.log('💾 Updated promotionalData:', updatedBlog.promotionalData);
+  //   console.log('💾 Updated faqData:', updatedBlog.faqData);
+
+  //   return this.transformBlogResponse(updatedBlog);
+  // }
 
   // ✅ DELETE BLOG
   async delete(id: number) {

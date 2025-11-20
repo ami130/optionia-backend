@@ -29,6 +29,7 @@ import { SharedModule } from './shared-module/shared-module.module';
 import { SeederModule } from './seeder/seeder.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { ModuleMiddleware } from './common/middlewares/module.middleware';
+import { PrivacyPolicyModule } from './modules/privacy-policy/privacy-policy.module';
 
 @Module({
   imports: [
@@ -103,7 +104,6 @@ export class AppModule implements NestModule {
 // import { SharedModule } from './shared-module/shared-module.module';
 // import { SeederModule } from './seeder/seeder.module';
 // import { CategoriesModule } from './modules/categories/categories.module';
-import { PrivacyPolicyModule } from './modules/privacy-policy/privacy-policy.module';
 
 // @Module({
 //   imports: [

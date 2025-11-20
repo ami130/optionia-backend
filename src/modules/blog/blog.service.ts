@@ -175,6 +175,57 @@ export class BlogService {
     const featured = data.featured === true || ['true', '1'].includes(String(data.featured));
     const status = data.status === true || ['true', '1', 'published'].includes(String(data.status));
 
+    // ✅ Handle promotionalData JSON - IMPROVED PARSING
+    let parsedPromotionalData: any = { title: '', keywords: [], promotional_url: '', image: '' };
+    if (data.promotionalData) {
+      if (typeof data.promotionalData === 'string') {
+        try {
+          const parsed = JSON.parse(data.promotionalData);
+          parsedPromotionalData = Object.assign(
+            {},
+            parsedPromotionalData,
+            parsed && typeof parsed === 'object' ? parsed : {},
+          );
+          console.log('✅ Parsed promotionalData from string:', parsedPromotionalData);
+        } catch (error) {
+          console.warn('Failed to parse promotionalData:', error);
+          // If parsing fails, try to handle it as object or keep defaults
+          if (data.promotionalData && typeof data.promotionalData === 'object') {
+            parsedPromotionalData = Object.assign(
+              {},
+              parsedPromotionalData,
+              data.promotionalData as Record<string, any>,
+            );
+          }
+        }
+      } else if (data.promotionalData && typeof data.promotionalData === 'object') {
+        parsedPromotionalData = Object.assign(
+          {},
+          parsedPromotionalData,
+          data.promotionalData as Record<string, any>,
+        );
+      }
+    }
+
+    // ✅ Handle faqData JSON - IMPROVED PARSING
+    let parsedFaqData: any = { faqTitle: '', items: [] };
+    if (data.faqData) {
+      if (typeof data.faqData === 'string') {
+        try {
+          parsedFaqData = { ...parsedFaqData, ...JSON.parse(data.faqData) };
+          console.log('✅ Parsed faqData from string:', parsedFaqData);
+        } catch (error) {
+          console.warn('Failed to parse faqData:', error);
+          // Only merge if it's truly an object at runtime
+          if (data.faqData && typeof data.faqData === 'object') {
+            parsedFaqData = { ...parsedFaqData, ...(data.faqData as Record<string, any>) };
+          }
+        }
+      } else if (data.faqData && typeof data.faqData === 'object') {
+        parsedFaqData = { ...parsedFaqData, ...(data.faqData as Record<string, any>) };
+      }
+    }
+
     // ✅ Handle uploaded files
     if (files?.length) {
       const allowedFields = ['thumbnail', 'image', 'promotional_image'];
@@ -198,47 +249,13 @@ export class BlogService {
       // Handle promotional image - FIXED
       if (fileData['promotional_image']) {
         console.log('✅ Promotional image found:', fileData['promotional_image']);
-        if (!data.promotionalData) {
-          data.promotionalData = {
-            title: '',
-            keywords: [],
-            promotional_url: '',
-            image: fileData['promotional_image'],
-          };
-        } else {
-          data.promotionalData = {
-            ...data.promotionalData,
-            image: fileData['promotional_image'],
-          };
-        }
-      }
-    }
-
-    // ✅ Handle promotionalData JSON
-    if (data.promotionalData && typeof data.promotionalData === 'string') {
-      try {
-        const promotionalContent = JSON.parse(data.promotionalData);
-        data.promotionalData = {
-          ...(data.promotionalData && typeof data.promotionalData === 'object' ? data.promotionalData : {}),
-          ...promotionalContent,
-        };
-      } catch (error) {
-        console.warn('Failed to parse promotionalData:', error);
-      }
-    }
-
-    // ✅ Handle faqData JSON
-    if (data.faqData && typeof data.faqData === 'string') {
-      try {
-        data.faqData = JSON.parse(data.faqData);
-      } catch (error) {
-        console.warn('Failed to parse faqData:', error);
+        parsedPromotionalData.image = fileData['promotional_image'];
       }
     }
 
     console.log('🎯 Final values - Featured:', featured, 'Status:', status);
-    console.log('📊 Promotional Data:', data.promotionalData);
-    console.log('❓ FAQ Data:', data.faqData);
+    console.log('📊 Promotional Data:', parsedPromotionalData);
+    console.log('❓ FAQ Data:', parsedFaqData);
 
     // ✅ Check if page exists
     const page = await this.pageRepo.findOne({ where: { id: data.pageId } });
@@ -277,7 +294,7 @@ export class BlogService {
     const existingBlog = await this.blogRepo.findOne({ where: { slug } });
     if (existingBlog) throw new ConflictException(`A blog with slug "${slug}" already exists`);
 
-    // ✅ Create blog entity with file URLs and proper boolean values
+    // ✅ Create blog entity with proper data structure
     const blog = this.blogRepo.create({
       ...data,
       slug,
@@ -288,15 +305,34 @@ export class BlogService {
       tags,
       authors,
       createdBy: user,
-      promotionalData: data.promotionalData,
-      faqData: data.faqData,
+      // Use properly parsed and structured data
+      promotionalData: {
+        title: parsedPromotionalData.title || '',
+        keywords: Array.isArray(parsedPromotionalData.keywords)
+          ? parsedPromotionalData.keywords
+          : parsedPromotionalData.keywords
+            ? [parsedPromotionalData.keywords]
+            : [],
+        promotional_url: parsedPromotionalData.promotional_url || '',
+        image: parsedPromotionalData.image || '',
+      },
+      faqData: {
+        faqTitle: parsedFaqData.faqTitle || '',
+        items: Array.isArray(parsedFaqData.items)
+          ? parsedFaqData.items.map((item: any, index: number) => ({
+              id: item?.id || `faq_${Date.now()}_${index}`,
+              question: item?.question || '',
+              answer: item?.answer || '',
+            }))
+          : [],
+      },
     });
 
     // ✅ Save blog
     const savedBlog = await this.blogRepo.save(blog);
     console.log('💾 Saved blog - Featured:', savedBlog.featured, 'Status:', savedBlog.status);
-    console.log('💾 Saved promotionalData:', savedBlog.promotionalData);
-    console.log('💾 Saved faqData:', savedBlog.faqData);
+    console.log('💾 Saved promotionalData:', JSON.stringify(savedBlog.promotionalData, null, 2));
+    console.log('💾 Saved faqData:', JSON.stringify(savedBlog.faqData, null, 2));
 
     return this.transformBlogResponse(savedBlog);
   }
@@ -417,6 +453,63 @@ export class BlogService {
     );
     console.log('📝 Current blog - Featured:', blog.featured, 'Status:', blog.status);
 
+    // ✅ Handle promotionalData JSON for update - IMPROVED PARSING
+    let parsedPromotionalData: any = blog.promotionalData || {
+      title: '',
+      keywords: [],
+      promotional_url: '',
+      image: '',
+    };
+    if (data.promotionalData) {
+      if (typeof data.promotionalData === 'string') {
+        try {
+          const newData = JSON.parse(data.promotionalData);
+          parsedPromotionalData = {
+            ...parsedPromotionalData,
+            ...(newData && typeof newData === 'object' ? (newData as Record<string, any>) : {}),
+          };
+          console.log('✅ Parsed promotionalData from string:', parsedPromotionalData);
+        } catch (error) {
+          console.warn('Failed to parse promotionalData:', error);
+          // If parsing fails but it's an object, use it directly
+          if (typeof data.promotionalData === 'object') {
+            parsedPromotionalData = {
+              ...parsedPromotionalData,
+              ...(data.promotionalData as Record<string, any>),
+            };
+          }
+        }
+      } else if (typeof data.promotionalData === 'object') {
+        parsedPromotionalData = {
+          ...parsedPromotionalData,
+          ...(data.promotionalData as Record<string, any>),
+        };
+      }
+    }
+
+    // ✅ Handle faqData JSON for update - IMPROVED PARSING
+    let parsedFaqData: any = blog.faqData || { faqTitle: '', items: [] };
+    if (data.faqData) {
+      if (typeof data.faqData === 'string') {
+        try {
+          const newData = JSON.parse(data.faqData);
+          if (newData && typeof newData === 'object') {
+            parsedFaqData = { ...parsedFaqData, ...(newData as Record<string, any>) };
+          } else {
+            console.warn('Parsed faqData is not an object:', newData);
+          }
+          console.log('✅ Parsed faqData from string:', parsedFaqData);
+        } catch (error) {
+          console.warn('Failed to parse faqData:', error);
+          if (data.faqData && typeof data.faqData === 'object') {
+            parsedFaqData = { ...parsedFaqData, ...(data.faqData as Record<string, any>) };
+          }
+        }
+      } else if (data.faqData && typeof data.faqData === 'object') {
+        parsedFaqData = { ...parsedFaqData, ...(data.faqData as Record<string, any>) };
+      }
+    }
+
     // ✅ Handle uploaded files for update
     if (files?.length) {
       const allowedFields = ['thumbnail', 'image', 'promotional_image'];
@@ -441,44 +534,7 @@ export class BlogService {
       // Handle promotional image - store the file path directly
       if (fileData['promotional_image']) {
         console.log('✅ Promotional image found:', fileData['promotional_image']);
-        // If promotionalData doesn't exist, create it
-        if (!data.promotionalData) {
-          data.promotionalData = {
-            title: '',
-            keywords: [],
-            promotional_url: '',
-            image: fileData['promotional_image'],
-          };
-        } else {
-          // If promotionalData exists, just add the image
-          data.promotionalData = {
-            ...data.promotionalData,
-            image: fileData['promotional_image'],
-          };
-        }
-      }
-    }
-
-    // ✅ Handle promotionalData JSON for update
-    if (data.promotionalData && typeof data.promotionalData === 'string') {
-      try {
-        const promotionalContent = JSON.parse(data.promotionalData);
-        data.promotionalData = {
-          ...blog.promotionalData,
-          ...(data.promotionalData && typeof data.promotionalData === 'object' ? data.promotionalData : {}),
-          ...promotionalContent,
-        };
-      } catch (error) {
-        console.warn('Failed to parse promotionalData:', error);
-      }
-    }
-
-    // ✅ Handle faqData JSON for update
-    if (data.faqData && typeof data.faqData === 'string') {
-      try {
-        data.faqData = JSON.parse(data.faqData);
-      } catch (error) {
-        console.warn('Failed to parse faqData:', error);
+        parsedPromotionalData.image = fileData['promotional_image'];
       }
     }
 
@@ -553,37 +609,32 @@ export class BlogService {
       blog.slug = data.slug || slugify(data.title);
     }
 
+    // ✅ Update promotionalData with proper structure
+    blog.promotionalData = {
+      title: parsedPromotionalData.title || '',
+      keywords: Array.isArray(parsedPromotionalData.keywords)
+        ? parsedPromotionalData.keywords
+        : parsedPromotionalData.keywords
+          ? [parsedPromotionalData.keywords]
+          : [],
+      promotional_url: parsedPromotionalData.promotional_url || '',
+      image: parsedPromotionalData.image || '',
+    };
+
+    // ✅ Update faqData with proper structure
+    blog.faqData = {
+      faqTitle: parsedFaqData.faqTitle || '',
+      items: Array.isArray(parsedFaqData.items)
+        ? parsedFaqData.items.map((it: any, index: number) => ({
+            id: it?.id || `faq_${Date.now()}_${index}`,
+            question: it?.question || '',
+            answer: it?.answer || '',
+          }))
+        : [],
+    };
+
     // ✅ Update other fields including new ones
     if (data.keyTakeaways !== undefined) blog.keyTakeaways = data.keyTakeaways;
-    if (data.promotionalData !== undefined) {
-      // Ensure promotionalData has all required fields and correct types before assignment
-      blog.promotionalData = {
-        title: data.promotionalData.title ?? '',
-        keywords: Array.isArray(data.promotionalData.keywords)
-          ? data.promotionalData.keywords
-          : data.promotionalData.keywords
-            ? [data.promotionalData.keywords]
-            : [],
-        promotional_url: data.promotionalData.promotional_url ?? '',
-        ...(data.promotionalData.image ? { image: data.promotionalData.image } : {}),
-      };
-    }
-    if (data.faqData !== undefined) {
-      // Normalize FAQ data to satisfy required fields and types
-      const rawFaq: any = data.faqData || {};
-      const items = Array.isArray(rawFaq.items)
-        ? rawFaq.items.map((it: any) => ({
-            id: it?.id !== undefined ? String(it.id) : `${Date.now()}_${Math.random().toString().slice(2)}`,
-            question: it?.question ?? '',
-            answer: it?.answer ?? '',
-          }))
-        : [];
-
-      blog.faqData = {
-        faqTitle: rawFaq.faqTitle ?? '',
-        items,
-      };
-    }
     if (data.readingTime !== undefined) blog.readingTime = data.readingTime;
     if (data.wordCount !== undefined) blog.wordCount = data.wordCount;
     if (data.blogType !== undefined) blog.blogType = data.blogType;
@@ -599,8 +650,8 @@ export class BlogService {
     // ✅ Save updated blog
     const updatedBlog = await this.blogRepo.save(blog);
     console.log('💾 After update - Featured:', updatedBlog.featured, 'Status:', updatedBlog.status);
-    console.log('💾 Updated promotionalData:', updatedBlog.promotionalData);
-    console.log('💾 Updated faqData:', updatedBlog.faqData);
+    console.log('💾 Updated promotionalData:', JSON.stringify(updatedBlog.promotionalData, null, 2));
+    console.log('💾 Updated faqData:', JSON.stringify(updatedBlog.faqData, null, 2));
 
     return this.transformBlogResponse(updatedBlog);
   }

@@ -40,7 +40,7 @@ export class User {
   @Column({ nullable: true })
   designation?: string;
 
-  @Column({ type: 'simple-array', nullable: true })
+  @Column('simple-array', { nullable: true })
   expertise?: string[];
 
   @ManyToOne(() => Role, { eager: true })

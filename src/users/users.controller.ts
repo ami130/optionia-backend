@@ -1,5 +1,18 @@
 // src/users/users.controller.ts
-import { Controller, Post, Body, UseGuards, Get, Req, Param, Put, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Req,
+  Param,
+  Put,
+  UseInterceptors,
+  UploadedFile,
+  Patch,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AssignRoleDto } from 'src/roles/dto/assign-role.dto';
@@ -7,7 +20,8 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadsService } from 'src/modules/uploads/uploads.service';
-import { UpdateUserDto } from 'src/auth/dto/create-user.dto';
+import { UpdateUserDto } from 'src/auth/dto/update-user.dto';
+import { CreateUserDto } from 'src/auth/dto/create-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -54,8 +68,13 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  // Update single user
-  @Put(':id')
+  // @Post()
+  // @UseInterceptors(FileInterceptor('profileImage'))
+  // create(@Body() createDto: CreateUserDto, @UploadedFile() file: Express.Multer.File) {
+  //   return this.usersService.create(createDto, file);
+  // }
+
+  @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @UseInterceptors(
@@ -67,6 +86,20 @@ export class UsersController {
   update(@Param('id') id: number, @Body() dto: UpdateUserDto, @UploadedFile() file?: Express.Multer.File) {
     return this.usersService.updateUser(id, dto, file);
   }
+
+  // Update single user
+  // @Put(':id')
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles('admin')
+  // @UseInterceptors(
+  //   FileInterceptor('profileImage', {
+  //     storage: new UploadsService().getFileStorage(),
+  //     fileFilter: new UploadsService().fileFilter,
+  //   }),
+  // )
+  // update(@Param('id') id: number, @Body() dto: UpdateUserDto, @UploadedFile() file?: Express.Multer.File) {
+  //   return this.usersService.updateUser(id, dto, file);
+  // }
 }
 
 // import { Controller, Post, Body, UseGuards, Get, Req, Param, Put, UseInterceptors, UploadedFile } from '@nestjs/common';

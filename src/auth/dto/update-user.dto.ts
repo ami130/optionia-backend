@@ -1,22 +1,22 @@
-import { IsArray, IsOptional, IsString, IsEmail, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsArray, IsOptional, IsString, IsEmail, IsNumber } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class CreateUserDto {
-  @IsNotEmpty()
+export class UpdateUserDto {
+  @IsOptional()
   @IsString()
-  username: string;
+  username?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsEmail()
-  email: string;
-
-  @IsNotEmpty()
-  @IsString()
-  password: string;
+  email?: string;
 
   @IsOptional()
   @IsNumber()
   roleId?: number;
+
+  @IsOptional()
+  @IsString()
+  password?: string;
 
   @IsOptional()
   @IsString()
@@ -39,13 +39,10 @@ export class CreateUserDto {
       } catch {
         // If it's a comma-separated string, split it
         if (value.includes(',')) {
-          return value
-            .split(',')
-            .map((item: string) => item.trim())
-            .filter((item: string) => item !== '');
+          return value.split(',').map((item: string) => item.trim()).filter((item: string) => item !== '');
         }
         // If it's a single string, wrap it in array
-        return [value.trim()];
+        return value.trim() ? [value.trim()] : [];
       }
     }
     return value;

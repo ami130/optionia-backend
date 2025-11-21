@@ -30,22 +30,43 @@ export class UpdateUserDto {
   @IsString()
   designation?: string;
 
+  /**
+   * SAME TRANSFORMER USED IN CreateUserDto
+   * This ensures update also accepts:
+   * - ["React","JS"]
+   * - '["React","JS"]'
+   * - "{React,JS}"
+   * - "React,JS"
+   * - "React"
+   */
   @IsOptional()
   @Transform(({ value }) => {
-    // Handle expertise transformation from string to array
-    if (typeof value === 'string') {
-      try {
-        return JSON.parse(value);
-      } catch {
-        // If it's a comma-separated string, split it
-        if (value.includes(',')) {
-          return value.split(',').map((item: string) => item.trim()).filter((item: string) => item !== '');
-        }
-        // If it's a single string, wrap it in array
-        return value.trim() ? [value.trim()] : [];
-      }
+    if (!value) return [];
+
+    // Already an array
+    if (Array.isArray(value)) return value;
+
+    // JSON string
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (_) {}
+
+    // PostgreSQL array format: "{A,B,C}"
+    if (typeof value === 'string' && value.startsWith('{') && value.endsWith('}')) {
+      return value
+        .slice(1, -1)
+        .split(',')
+        .map((v) => v.trim());
     }
-    return value;
+
+    // Comma separated
+    if (typeof value === 'string' && value.includes(',')) {
+      return value.split(',').map((v) => v.trim());
+    }
+
+    // Single string
+    return [String(value).trim()];
   })
   @IsArray()
   @IsString({ each: true })

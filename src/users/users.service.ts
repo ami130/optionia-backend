@@ -33,30 +33,29 @@ export class UsersService {
    * Handle expertise field transformation
    */
   private handleExpertiseField(expertise: any): string[] {
+    console.log('🔧 Handling expertise field:', expertise, typeof expertise);
+
     if (!expertise) return [];
 
-    // If it's already an array, return it
+    // If it's already an array, return it directly
     if (Array.isArray(expertise)) {
       return expertise.filter((item) => item && item.trim() !== '');
     }
 
-    // If it's a string, try to parse it
+    // If it's a string, try to parse it (fallback for other formats)
     if (typeof expertise === 'string') {
       try {
-        // Try to parse as JSON first
         const parsed = JSON.parse(expertise);
         if (Array.isArray(parsed)) {
           return parsed.filter((item) => item && item.trim() !== '');
         }
       } catch {
-        // If JSON parsing fails, treat as comma-separated string
         if (expertise.includes(',')) {
           return expertise
             .split(',')
             .map((item) => item.trim())
             .filter((item) => item !== '');
         }
-        // Single string value
         return expertise.trim() ? [expertise.trim()] : [];
       }
     }
@@ -107,54 +106,53 @@ export class UsersService {
     const user = await this.userRepo.findOne({ where: { id }, relations: ['role'] });
     if (!user) throw new NotFoundException('User not found');
 
-    const { username, email, roleId, password, bio, linkedinProfile, designation, expertise, ...rest } = updateDto;
+    const { username, email, roleId, password, bio, linkedinProfile, designation, expertise } = updateDto;
 
-    // Check for duplicate username if changing
+    // Update username
     if (username && username !== user.username) {
-      const existingUser = await this.userRepo.findOne({ where: { username } });
-      if (existingUser) throw new ConflictException('Username already exists');
+      const exists = await this.userRepo.findOne({ where: { username } });
+      if (exists) throw new ConflictException('Username already exists');
       user.username = username;
     }
 
-    // Check for duplicate email if changing
+    // Update email
     if (email && email !== user.email) {
-      const existingUser = await this.userRepo.findOne({ where: { email } });
-      if (existingUser) throw new ConflictException('Email already exists');
+      const exists = await this.userRepo.findOne({ where: { email } });
+      if (exists) throw new ConflictException('Email already exists');
       user.email = email;
     }
 
-    // Update password if provided
+    // Password
     if (password) {
       user.password = await bcrypt.hash(password, 10);
     }
 
-    // Update role if provided
+    // Role
     if (roleId) {
       const role = await this.roleRepo.findOne({ where: { id: roleId } });
       if (!role) throw new NotFoundException('Role not found');
       user.role = role;
     }
 
-    // Update optional fields
+    // Optional fields
     if (bio !== undefined) user.bio = bio;
     if (linkedinProfile !== undefined) user.linkedinProfile = linkedinProfile;
     if (designation !== undefined) user.designation = designation;
 
-    // Handle expertise transformation for update
+    // Expertise (final version)
     if (expertise !== undefined) {
-      user.expertise = this.handleExpertiseField(expertise);
+      user.expertise = expertise; // DTO handles all transformations
     }
 
-    // Handle profile image update
+    // Profile image
     if (file) {
-      // Remove old file if exists
       if (user.profileImage) this.removeFileIfExists(user.profileImage);
       this.uploadsService.mapFilesToData([file], user, ['profileImage']);
     }
 
-    const updatedUser = await this.userRepo.save(user);
-    const { password: _, ...userWithoutPassword } = updatedUser;
-    return userWithoutPassword;
+    const updated = await this.userRepo.save(user);
+    const { password: _, ...result } = updated;
+    return result;
   }
 
   // ... rest of your existing methods remain the same

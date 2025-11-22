@@ -1,7 +1,7 @@
 // src/modules/blog/blog.service.ts
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, Brackets } from 'typeorm';
 import { Blog } from './entities/blog.entity';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
@@ -199,11 +199,7 @@ export class BlogService {
           }
         }
       } else if (data.promotionalData && typeof data.promotionalData === 'object') {
-        parsedPromotionalData = Object.assign(
-          {},
-          parsedPromotionalData,
-          data.promotionalData as Record<string, any>,
-        );
+        parsedPromotionalData = Object.assign({}, parsedPromotionalData, data.promotionalData as Record<string, any>);
       }
     }
 
@@ -339,12 +335,11 @@ export class BlogService {
 
   // ✅ GET ALL BLOGS WITH FILTERS AND PAGINATION
   async getAll(filters: BlogFilterDto): Promise<PaginatedResponse<any>> {
-    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' } = filters;
+    const { page = 1, limit = 9, search, sortBy = 'createdAt', sortOrder = 'DESC' } = filters;
     const skip = (page - 1) * limit;
 
-    console.log('🔍 Filters received:', filters);
+    console.log(`📊 Pagination: Page ${page}, Limit ${limit}, Skip ${skip}`);
 
-    // Create query builder for flexible filtering
     const queryBuilder = this.blogRepo
       .createQueryBuilder('blog')
       .leftJoinAndSelect('blog.category', 'category')
@@ -353,64 +348,21 @@ export class BlogService {
       .leftJoinAndSelect('blog.tags', 'tags')
       .leftJoinAndSelect('blog.createdBy', 'createdBy');
 
-    // ✅ CHANGED: Only filter by status if explicitly provided
-    if (filters.status !== undefined) {
-      console.log('🎯 Filtering by status:', filters.status);
-      queryBuilder.andWhere('blog.status = :status', { status: filters.status });
-    }
-    // ✅ If status not provided, show ALL blogs (no status filter)
+    // ✅ Apply filters
+    this.applyFilters(queryBuilder, filters, search);
 
-    // Add search condition across title, subtitle, and content
-    if (search) {
-      queryBuilder.andWhere('(blog.title ILIKE :search OR blog.subtitle ILIKE :search OR blog.content ILIKE :search)', {
-        search: `%${search}%`,
-      });
-    }
-
-    // ✅ FIXED: Add category filter by slug
-    if (filters.category) {
-      queryBuilder.andWhere('category.slug = :categorySlug', { categorySlug: filters.category });
-    }
-
-    // Add author filter (many-to-many relationship)
-    if (filters.author) {
-      queryBuilder.andWhere('authors.id = :authorId', { authorId: filters.author });
-    }
-
-    // Add blogType filter
-    if (filters.blogType) {
-      queryBuilder.andWhere('blog.blogType = :blogType', { blogType: filters.blogType });
-    }
-
-    // ✅ FIXED: Featured filter - handle boolean properly
-    if (filters.featured !== undefined) {
-      console.log('🎯 Filtering by featured:', filters.featured);
-      queryBuilder.andWhere('blog.featured = :featured', { featured: filters.featured });
-    }
-
-    // ✅ FIXED: Add tags filter by slug instead of ID
-    if (filters.tagSlugs) {
-      const tagSlugs = filters.tagSlugs.split(',').map((slug) => slug.trim());
-      queryBuilder.andWhere('tags.slug IN (:...tagSlugs)', { tagSlugs });
-    }
-
-    // ✅ FIXED: Add tags filter by ID (like category)
-    if (filters.tagIds) {
-      const tagIds = filters.tagIds.split(',').map((id) => parseInt(id.trim()));
-      queryBuilder.andWhere('tags.id IN (:...tagIds)', { tagIds });
-    }
-
-    // Get total count
+    // ✅ Get total count
     const total = await queryBuilder.getCount();
+    console.log(`📈 Total blogs found: ${total}`);
 
-    // Apply pagination and ordering
-    const data = await queryBuilder.orderBy(`blog.${sortBy}`, sortOrder).skip(skip).take(limit).getMany();
+    // ✅ Apply pagination and ordering
+    const data = await queryBuilder
+      .orderBy(`blog.${this.validateSortField(sortBy)}`, sortOrder)
+      .skip(skip)
+      .take(limit)
+      .getMany();
 
-    console.log('📊 Blogs found:', data.length);
-    console.log(
-      '🎯 Featured values in results:',
-      data.map((blog) => ({ id: blog.id, featured: blog.featured, status: blog.status })),
-    );
+    console.log(`✅ Retrieved ${data.length} blogs for page ${page}`);
 
     const totalPages = Math.ceil(total / limit);
 
@@ -426,6 +378,177 @@ export class BlogService {
       },
     };
   }
+
+  private applyFilters(queryBuilder: any, filters: BlogFilterDto, search?: string) {
+    // ✅ Status filter - default to active blogs if not specified
+    if (filters.status !== undefined) {
+      queryBuilder.andWhere('blog.status = :status', { status: filters.status });
+    } else {
+      queryBuilder.andWhere('blog.status = :status', { status: true });
+    }
+
+    // ✅ Search across multiple fields
+    if (search) {
+      queryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.where('blog.title ILIKE :search', { search: `%${search}%` })
+            .orWhere('blog.subtitle ILIKE :search', { search: `%${search}%` })
+            .orWhere('blog.content ILIKE :search', { search: `%${search}%` })
+            .orWhere('category.name ILIKE :search', { search: `%${search}%` })
+            .orWhere('tags.name ILIKE :search', { search: `%${search}%` });
+        }),
+      );
+    }
+
+    // ✅ Category filter by slug
+    if (filters.category) {
+      queryBuilder.andWhere('category.slug = :categorySlug', { categorySlug: filters.category });
+    }
+
+    // ✅ Author filter
+    if (filters.author) {
+      queryBuilder.andWhere('authors.id = :authorId', { authorId: filters.author });
+    }
+
+    // ✅ Blog type filter
+    if (filters.blogType) {
+      queryBuilder.andWhere('blog.blogType = :blogType', { blogType: filters.blogType });
+    }
+
+    // ✅ Featured filter
+    if (filters.featured !== undefined) {
+      queryBuilder.andWhere('blog.featured = :featured', { featured: filters.featured });
+    }
+
+    // ✅ Tags filter by slugs
+    if (filters.tagSlugs) {
+      const tagSlugs = filters.tagSlugs.split(',').map((slug) => slug.trim());
+      queryBuilder.andWhere('tags.slug IN (:...tagSlugs)', { tagSlugs });
+    }
+
+    // ✅ Tags filter by IDs
+    if (filters.tagIds) {
+      const tagIds = filters.tagIds.split(',').map((id) => parseInt(id.trim()));
+      queryBuilder.andWhere('tags.id IN (:...tagIds)', { tagIds });
+    }
+  }
+
+  private validateSortField(sortBy: string): string {
+    const allowedSortFields = ['createdAt', 'updatedAt', 'title', 'readingTime', 'wordCount', 'featured'];
+    return allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+  }
+
+  private async getBlogPageEntity() {
+    let page = await this.pageRepo.findOne({
+      where: [{ url: '/blog' }, { slug: 'blog' }],
+    });
+
+    if (!page) {
+      // Return virtual page
+      return {
+        id: 0,
+        name: 'Blog',
+        title: 'Blog - Optionia',
+        description: 'Read our latest blog posts and articles',
+        slug: 'blog',
+        url: '/blog',
+        metaTitle: 'Blog - Optionia',
+        metaDescription: 'Read our latest blog posts and articles',
+        isActive: true,
+      };
+    }
+
+    return page;
+  }
+
+  // async getAll(filters: BlogFilterDto): Promise<PaginatedResponse<any>> {
+  //   const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' } = filters;
+  //   const skip = (page - 1) * limit;
+
+  //   console.log('🔍 Filters received:', filters);
+
+  //   // Create query builder for flexible filtering
+  //   const queryBuilder = this.blogRepo
+  //     .createQueryBuilder('blog')
+  //     .leftJoinAndSelect('blog.category', 'category')
+  //     .leftJoinAndSelect('blog.page', 'page')
+  //     .leftJoinAndSelect('blog.authors', 'authors')
+  //     .leftJoinAndSelect('blog.tags', 'tags')
+  //     .leftJoinAndSelect('blog.createdBy', 'createdBy');
+
+  //   // ✅ CHANGED: Only filter by status if explicitly provided
+  //   if (filters.status !== undefined) {
+  //     console.log('🎯 Filtering by status:', filters.status);
+  //     queryBuilder.andWhere('blog.status = :status', { status: filters.status });
+  //   }
+  //   // ✅ If status not provided, show ALL blogs (no status filter)
+
+  //   // Add search condition across title, subtitle, and content
+  //   if (search) {
+  //     queryBuilder.andWhere('(blog.title ILIKE :search OR blog.subtitle ILIKE :search OR blog.content ILIKE :search)', {
+  //       search: `%${search}%`,
+  //     });
+  //   }
+
+  //   // ✅ FIXED: Add category filter by slug
+  //   if (filters.category) {
+  //     queryBuilder.andWhere('category.slug = :categorySlug', { categorySlug: filters.category });
+  //   }
+
+  //   // Add author filter (many-to-many relationship)
+  //   if (filters.author) {
+  //     queryBuilder.andWhere('authors.id = :authorId', { authorId: filters.author });
+  //   }
+
+  //   // Add blogType filter
+  //   if (filters.blogType) {
+  //     queryBuilder.andWhere('blog.blogType = :blogType', { blogType: filters.blogType });
+  //   }
+
+  //   // ✅ FIXED: Featured filter - handle boolean properly
+  //   if (filters.featured !== undefined) {
+  //     console.log('🎯 Filtering by featured:', filters.featured);
+  //     queryBuilder.andWhere('blog.featured = :featured', { featured: filters.featured });
+  //   }
+
+  //   // ✅ FIXED: Add tags filter by slug instead of ID
+  //   if (filters.tagSlugs) {
+  //     const tagSlugs = filters.tagSlugs.split(',').map((slug) => slug.trim());
+  //     queryBuilder.andWhere('tags.slug IN (:...tagSlugs)', { tagSlugs });
+  //   }
+
+  //   // ✅ FIXED: Add tags filter by ID (like category)
+  //   if (filters.tagIds) {
+  //     const tagIds = filters.tagIds.split(',').map((id) => parseInt(id.trim()));
+  //     queryBuilder.andWhere('tags.id IN (:...tagIds)', { tagIds });
+  //   }
+
+  //   // Get total count
+  //   const total = await queryBuilder.getCount();
+
+  //   // Apply pagination and ordering
+  //   const data = await queryBuilder.orderBy(`blog.${sortBy}`, sortOrder).skip(skip).take(limit).getMany();
+
+  //   console.log('📊 Blogs found:', data.length);
+  //   console.log(
+  //     '🎯 Featured values in results:',
+  //     data.map((blog) => ({ id: blog.id, featured: blog.featured, status: blog.status })),
+  //   );
+
+  //   const totalPages = Math.ceil(total / limit);
+
+  //   return {
+  //     data: data.map((blog) => this.transformBlogResponse(blog)),
+  //     meta: {
+  //       total,
+  //       page,
+  //       limit,
+  //       totalPages,
+  //       hasNext: page < totalPages,
+  //       hasPrev: page > 1,
+  //     },
+  //   };
+  // }
 
   // ✅ ADVANCED SEARCH
   async searchBlogs(filters: BlogFilterDto) {
@@ -1031,8 +1154,8 @@ export class BlogService {
         };
 
         return {
-          page: virtualPage,
-          blogs,
+          page,
+          blogs: blogsResponse.data,
           pagination: blogsResponse.meta,
         };
       }
@@ -1105,34 +1228,16 @@ export class BlogService {
       (blog.content ? blog.content.replace(/<[^>]+>/g, '').substring(0, 160) : '') ||
       'Explore this blog on Optionia.';
 
-    const pageUrl = `https://optionia.com/${blog.page?.slug || 'blog'}/${blog.slug}`;
-
-    const openGraph = {
-      title: metaTitle,
-      description: metaDescription,
-      url: pageUrl,
-      type: 'article',
-      image: blog.thumbnailUrl || blog.image?.[0],
-    };
-
-    const twitter = {
-      card: 'summary_large_image',
-      title: metaTitle,
-      description: metaDescription,
-      image: blog.thumbnailUrl || blog.image?.[0],
-    };
-
     return {
       id: blog.id,
       title: blog.title,
       slug: blog.slug,
       subtitle: blog.subtitle,
       content: blog.content,
-      keyTakeaways: blog.keyTakeaways, // ✅ New field
+      keyTakeaways: blog.keyTakeaways,
       thumbnailUrl: blog.thumbnailUrl,
       image: blog.image,
       metaData: blog.metaData,
-      // ✅ New fields included in response
       promotionalData: blog.promotionalData,
       faqData: blog.faqData,
       readingTime: blog.readingTime,
@@ -1154,7 +1259,11 @@ export class BlogService {
             slug: blog.category.slug,
           }
         : null,
-      tags: blog.tags?.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
+      tags: blog.tags?.map((t) => ({
+        id: t.id,
+        name: t.name,
+        slug: t.slug,
+      })),
       authors: blog.authors?.map((a) => ({
         id: a.id,
         username: a.username,
@@ -1171,10 +1280,86 @@ export class BlogService {
         : null,
       createdAt: blog.createdAt,
       updatedAt: blog.updatedAt,
-      openGraph,
-      twitter,
     };
   }
+  // private transformBlogResponse(blog: Blog) {
+  //   const metaTitle = blog.metaData?.metaTitle || blog.title;
+  //   const metaDescription =
+  //     blog.metaData?.metaDescription ||
+  //     blog.subtitle ||
+  //     (blog.content ? blog.content.replace(/<[^>]+>/g, '').substring(0, 160) : '') ||
+  //     'Explore this blog on Optionia.';
+
+  //   const pageUrl = `https://optionia.com/${blog.page?.slug || 'blog'}/${blog.slug}`;
+
+  //   const openGraph = {
+  //     title: metaTitle,
+  //     description: metaDescription,
+  //     url: pageUrl,
+  //     type: 'article',
+  //     image: blog.thumbnailUrl || blog.image?.[0],
+  //   };
+
+  //   const twitter = {
+  //     card: 'summary_large_image',
+  //     title: metaTitle,
+  //     description: metaDescription,
+  //     image: blog.thumbnailUrl || blog.image?.[0],
+  //   };
+
+  //   return {
+  //     id: blog.id,
+  //     title: blog.title,
+  //     slug: blog.slug,
+  //     subtitle: blog.subtitle,
+  //     content: blog.content,
+  //     keyTakeaways: blog.keyTakeaways, // ✅ New field
+  //     thumbnailUrl: blog.thumbnailUrl,
+  //     image: blog.image,
+  //     metaData: blog.metaData,
+  //     // ✅ New fields included in response
+  //     promotionalData: blog.promotionalData,
+  //     faqData: blog.faqData,
+  //     readingTime: blog.readingTime,
+  //     wordCount: blog.wordCount,
+  //     featured: blog.featured,
+  //     blogType: blog.blogType,
+  //     status: blog.status,
+  //     page: blog.page
+  //       ? {
+  //           id: blog.page.id,
+  //           name: blog.page.name,
+  //           slug: blog.page.slug,
+  //         }
+  //       : null,
+  //     category: blog.category
+  //       ? {
+  //           id: blog.category.id,
+  //           name: blog.category.name,
+  //           slug: blog.category.slug,
+  //         }
+  //       : null,
+  //     tags: blog.tags?.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
+  //     authors: blog.authors?.map((a) => ({
+  //       id: a.id,
+  //       username: a.username,
+  //       email: a.email,
+  //       profileImage: a.profileImage,
+  //     })),
+  //     createdBy: blog.createdBy
+  //       ? {
+  //           id: blog.createdBy.id,
+  //           username: blog.createdBy.username,
+  //           email: blog.createdBy.email,
+  //           profileImage: blog.createdBy.profileImage,
+  //         }
+  //       : null,
+  //     createdAt: blog.createdAt,
+  //     updatedAt: blog.updatedAt,
+  //     openGraph,
+  //     twitter,
+  //   };
+  // }
 
   // ✅ BULK OPERATIONS (Optional)
   async bulkDelete(ids: number[]) {

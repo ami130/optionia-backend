@@ -1,6 +1,7 @@
 // src/modules/blog/dto/blog-query.dto.ts
-import { IsOptional, IsNumber, Min, IsString, IsArray, IsEnum, IsBoolean } from 'class-validator';
+import { IsOptional, IsNumber, Min, IsString, IsEnum, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 
 export enum SortOrder {
   ASC = 'ASC',
@@ -18,7 +19,8 @@ export class BlogFilterDto {
   @Type(() => Number)
   @IsNumber()
   @Min(1)
-  limit?: number = 10;
+  @Min(9) // Ensure at least 9 items per page
+  limit?: number = 9; // Changed default to 9
 
   @IsOptional()
   @IsString()
@@ -34,7 +36,7 @@ export class BlogFilterDto {
 
   @IsOptional()
   @IsString()
-  category?: string; // Change from number to string for slug
+  category?: string;
 
   @IsOptional()
   @Type(() => Number)
@@ -43,7 +45,7 @@ export class BlogFilterDto {
 
   @IsOptional()
   @IsString()
-  tagSlugs?: string; // Change from tagIds to tagSlugs
+  tagSlugs?: string;
 
   @IsOptional()
   @IsString()
@@ -59,10 +61,20 @@ export class BlogFilterDto {
   blogType?: string;
 
   @IsOptional()
-  @Type(() => Boolean)
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
   featured?: boolean;
 
   @IsOptional()
-  @Type(() => Boolean)
-  status?: boolean;
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  status?: boolean = true; // Default to active blogs
 }

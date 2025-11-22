@@ -5,5 +5,9 @@ export class PaginatedResponseDto<T> {
     page: number;
     limit: number;
     totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+    nextPage: number | null;
+    prevPage: number | null;
   };
 }

@@ -72,20 +72,43 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector), apiResponseInterceptor);
   app.useGlobalFilters(new TypeOrmExceptionFilter());
 
-  // ✅ FIXED CORS configuration - SIMPLE ARRAY APPROACH
-  const allowedOrigins = [
-    'https://optionia.com',
-    'https://optionia-dashboard.vercel.app',
-    'https://optionia-web.vercel.app',
-    'https://optionia-backend.onrender.com',
-    'http://localhost:5173',
-    'http://localhost:3000',
-  ];
+  // parse CORS_ORIGINS env (fall back to default list if missing or invalid)
+  const rawCors = configService.get<string>('CORS_ORIGINS') ?? '';
+  let allowedOrigins: string[] = [];
+
+  try {
+    // Accept either a JSON array string or a comma-separated list
+    if (rawCors.trim().startsWith('[')) {
+      allowedOrigins = JSON.parse(rawCors);
+    } else if (rawCors.trim().length) {
+      allowedOrigins = rawCors
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+  } catch (err) {
+    logger.warn('Invalid CORS_ORIGINS format, falling back to default list');
+  }
+
+  // Fallback default if nothing provided
+  if (!allowedOrigins.length) {
+    allowedOrigins = [
+      'https://optionia.com',
+      'https://beta.optionia.com',
+      'https://admin.optionia.com',
+      'http://localhost:5003',
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'https://optionia-dashboard.vercel.app',
+      'https://optionia-web.vercel.app',
+      'https://optionia-backend.onrender.com',
+    ];
+  }
 
   logger.log(`✅ Allowed CORS origins: ${JSON.stringify(allowedOrigins)}`);
 
   app.enableCors({
-    origin: allowedOrigins, // Simple array - no complex callback
+    origin: allowedOrigins,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: [
@@ -99,6 +122,37 @@ async function bootstrap() {
       'Access-Control-Request-Headers',
     ],
   });
+
+  // ✅ FIXED CORS configuration - SIMPLE ARRAY APPROACH
+  // const allowedOrigins = [
+  //   'https://optionia.com',
+  //   'https://beta.optionia.com',
+  //   'https://admin.optionia.com',
+  //   'http://localhost:5003',
+  //   'http://localhost:3000',
+  //   'http://localhost:5173',
+  //   'https://optionia-dashboard.vercel.app',
+  //   'https://optionia-web.vercel.app',
+  //   'https://optionia-backend.onrender.com',
+  // ];
+
+  // logger.log(`✅ Allowed CORS origins: ${JSON.stringify(allowedOrigins)}`);
+
+  // app.enableCors({
+  //   origin: allowedOrigins, // Simple array - no complex callback
+  //   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  //   credentials: true,
+  //   allowedHeaders: [
+  //     'Content-Type',
+  //     'Authorization',
+  //     'X-Requested-With',
+  //     'Accept',
+  //     'Origin',
+  //     'Access-Control-Allow-Headers',
+  //     'Access-Control-Request-Method',
+  //     'Access-Control-Request-Headers',
+  //   ],
+  // });
 
   // ✅ Health check endpoint
   const server = app.getHttpAdapter().getInstance();

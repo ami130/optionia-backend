@@ -1,5 +1,14 @@
 // src/modules/blog/blog-page.controller.ts
-import { Controller, Get, NotFoundException, Param, ParseIntPipe, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
+  Query,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { BlogService } from './blog.service';
 import { ApiResponseInterceptor } from 'src/common/interceptors/api-response.interceptor';
 import { BlogFilterDto } from './dto/blog-query.dto';
@@ -35,6 +44,4 @@ export class BlogPageController {
     // If we reach here, it means slug wasn't found and identifier isn't numeric
     throw new NotFoundException(`Blog with identifier "${identifier}" not found`);
   }
-
-  
 }

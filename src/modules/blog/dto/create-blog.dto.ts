@@ -84,6 +84,10 @@ export class CreateBlogDto {
   thumbnailUrl?: string;
 
   @IsOptional()
+  @IsString()
+  thumbnailAltText?: string;
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   image?: string[];

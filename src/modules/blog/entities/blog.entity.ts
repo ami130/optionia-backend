@@ -37,6 +37,9 @@ export class Blog {
   @Column({ nullable: true })
   thumbnailUrl?: string;
 
+  @Column({ nullable: true })
+  thumbnailAltText?: string;
+
   @Column({ type: 'simple-array', nullable: true })
   image?: string[];
 

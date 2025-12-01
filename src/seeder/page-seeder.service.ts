@@ -122,6 +122,30 @@ export class PageSeederService {
           metaDescription: 'Privacy Policy our team for any inquiries',
         },
       },
+      {
+        name: 'Partner',
+        title: 'Partner - Optionia',
+        description: 'Get in touch with us',
+        slug: 'partner',
+        url: '/partner',
+        isActive: true,
+        metaData: {
+          metaTitle: 'Partner - Optionia',
+          metaDescription: 'Partner our team for any inquiries',
+        },
+      },
+      {
+        name: 'Pricing',
+        title: 'Pricing - Optionia',
+        description: 'Get in touch with us',
+        slug: 'pricing',
+        url: '/pricing',
+        isActive: true,
+        metaData: {
+          metaTitle: 'Pricing - Optionia',
+          metaDescription: 'Pricing our team for any inquiries',
+        },
+      },
     ];
 
     try {

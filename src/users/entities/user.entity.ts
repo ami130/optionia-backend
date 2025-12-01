@@ -47,7 +47,7 @@ export class User {
   @JoinColumn({ name: 'role_id' })
   role: Role;
 
-  @Column({ nullable: true, length: 120 })
+  @Column({ nullable: true, length: 500 })
   bio?: string;
 
   @Column({ nullable: true })

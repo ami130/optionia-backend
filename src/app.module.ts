@@ -30,6 +30,10 @@ import { SeederModule } from './seeder/seeder.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { ModuleMiddleware } from './common/middlewares/module.middleware';
 import { PrivacyPolicyModule } from './modules/privacy-policy/privacy-policy.module';
+import { PartnerCategoriesModule } from './modules/partner/partner-category/partner-category.module';
+import { PartnersModule } from './modules/partner/partner/partner.module';
+import { PartnerApplicationsModule } from './modules/partner/partner-applications/partner-applications.module';
+import { PricingModule } from './modules/pricing/pricing.module';
 
 @Module({
   imports: [
@@ -65,6 +69,10 @@ import { PrivacyPolicyModule } from './modules/privacy-policy/privacy-policy.mod
     SeederModule,
     CategoriesModule,
     PrivacyPolicyModule,
+    PartnerCategoriesModule,
+    PartnersModule,
+    PartnerApplicationsModule,
+    PricingModule,
   ],
   controllers: [UploadsController],
   providers: [UploadsService],
@@ -74,6 +82,7 @@ export class AppModule implements NestModule {
     consumer.apply(ModuleMiddleware).forRoutes('*'); // Apply to all routes
   }
 }
+
 // /* eslint-disable prettier/prettier */
 // import { Module } from '@nestjs/common';
 // import { TypeOrmModule } from '@nestjs/typeorm';

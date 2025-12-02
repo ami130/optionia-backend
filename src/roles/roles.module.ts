@@ -7,11 +7,13 @@ import { RoleModulePermission } from './entities/role-module-permission/role-mod
 import { ModuleEntity } from './entities/module/module.entity';
 import { Permission } from './entities/permission.entity/permission.entity';
 import { UsersModule } from 'src/users/users.module';
+import { ModulesModule } from './modules/modules.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Role, RoleModulePermission, ModuleEntity, Permission]),
     forwardRef(() => UsersModule), // 🔹 forwardRef solves circular dependency
+    forwardRef(() => ModulesModule), // Use forwardRef here too
   ],
   providers: [RolesService],
   controllers: [RolesController],

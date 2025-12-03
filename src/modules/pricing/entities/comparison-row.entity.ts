@@ -1,5 +1,4 @@
-// src/modules/pricing/entities/comparison-row.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { ComparisonTable } from './comparison-table.entity';
 
 @Entity('comparison_rows')
@@ -11,7 +10,7 @@ export class ComparisonRow {
   label: string;
 
   @Column({ type: 'text' })
-  free_value: string; // Can be string, "true", "false", or JSON
+  free_value: string;
 
   @Column({ type: 'text' })
   pro_value: string;
@@ -31,4 +30,10 @@ export class ComparisonRow {
 
   @Column()
   table_id: number;
+
+  @CreateDateColumn({ name: 'created_at' })
+  created_at: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updated_at: Date;
 }

@@ -13,9 +13,16 @@ export class PricingController {
   constructor(private readonly pricingService: PricingService) {}
 
   // ✅ GET PRICING DATA (Public)
+  // ✅ GET COMPLETE PRICING DATA (Page + Plans + Comparison Tables)
   @Get()
   async getPricingData() {
     return this.pricingService.getPricingData();
+  }
+
+  // ✅ GET ONLY PRICING PAGE DATA
+  @Get('page')
+  async getPricingPage() {
+    return this.pricingService.getPricingPage();
   }
 
   // ✅ UPDATE PRICING DATA (Admin)

@@ -8,9 +8,13 @@ import { PricingFeature } from './entities/pricing-feature.entity';
 import { ComparisonTable } from './entities/comparison-table.entity';
 import { ComparisonRow } from './entities/comparison-row.entity';
 import { SharedModule } from 'src/shared-module/shared-module.module';
+import { Page } from '../pages/entities/page.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PricingPlan, PricingFeature, ComparisonTable, ComparisonRow]), SharedModule],
+  imports: [
+    TypeOrmModule.forFeature([PricingPlan, PricingFeature, ComparisonTable, ComparisonRow, Page]),
+    SharedModule,
+  ],
   controllers: [PricingController],
   providers: [PricingService],
   exports: [PricingService],

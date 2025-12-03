@@ -1,5 +1,4 @@
-// src/modules/pricing/dto/pricing.dto.ts
-import { IsString, IsNumber, IsBoolean, IsOptional, IsArray, ValidateNested, IsUrl } from 'class-validator';
+import { IsString, IsNumber, IsBoolean, IsOptional, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class PricingFeatureDto {
@@ -21,6 +20,10 @@ export class PricingFeatureDto {
   @IsOptional()
   @IsBoolean()
   is_active?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  plan_id?: number;
 }
 
 export class ComparisonRowDto {
@@ -47,6 +50,10 @@ export class ComparisonRowDto {
   @IsOptional()
   @IsBoolean()
   is_active?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  table_id?: number;
 }
 
 export class ComparisonTableDto {
@@ -98,7 +105,7 @@ export class PricingPlanDto {
   button_text: string;
 
   @IsString()
-  button_link: string; // Changed from @IsUrl() to @IsString() for flexibility
+  button_link: string;
 
   @IsNumber()
   monthly_price: number;
